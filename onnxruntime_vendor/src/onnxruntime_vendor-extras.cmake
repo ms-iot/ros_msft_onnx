@@ -18,6 +18,9 @@ if (NOT TARGET onnxruntime-unofficial::onnxruntime)
         IMPORTED_IMPLIB_RELEASE "${_IMPORT_PREFIX}/lib/onnxruntime.lib"
         IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/bin/onnxruntime.dll"
     )
+    set_target_properties(onnxruntime-unofficial::onnxruntime PROPERTIES
+        LINK_FLAGS_RELEASE "/DELAYLOAD:onnxruntime.dll"
+    )
 endif()
 
 list(APPEND onnxruntime_vendor_TARGETS onnxruntime-unofficial::onnxruntime)

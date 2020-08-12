@@ -2,8 +2,12 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/string.hpp>
-#include <onnxruntime_cxx_api.h>
+#include <sensor_msgs/msg/image.hpp>
+#include <object_tracker/yolo_processor.h>
+
 using std::placeholders::_1;
+
+YoloProcessor g_onnx;
 
 class MinimalSubscriber : public rclcpp::Node
 {
@@ -11,29 +15,26 @@ class MinimalSubscriber : public rclcpp::Node
     MinimalSubscriber()
     : Node("minimal_subscriber")
     {
-      subscription_ = this->create_subscription<std_msgs::msg::String>(
-      "topic", 10, std::bind(&MinimalSubscriber::topic_callback, this, _1));
+      std::string default_image = "/image_raw";
+      this->get_parameter_or("image_topic", image_topic_, default_image);
+      subscription_ = this->create_subscription<sensor_msgs::msg::Image>(
+      image_topic_, 10, std::bind(&MinimalSubscriber::topic_callback, this, _1));
     }
 
   private:
-    void topic_callback(const std_msgs::msg::String::SharedPtr msg) const
+    void topic_callback(const sensor_msgs::msg::Image::SharedPtr msg) const
     {
-      RCLCPP_INFO(this->get_logger(), "I heard: '%s'", msg->data.c_str());
+      g_onnx.ProcessImage(msg);
+      //RCLCPP_INFO(this->get_logger(), "I heard: '%s'", msg->data.c_str());
     }
-    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_;
+    rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr subscription_;
+
+    std::string image_topic_;
 };
 
 int main(int argc, char * argv[])
 {
-  //*************************************************************************
-  // initialize  enviroment...one enviroment per process
-  // enviroment maintains thread pools and other state info
-  Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "test");
-
-  // initialize session options if needed
-  Ort::SessionOptions session_options;
-  session_options.SetIntraOpNumThreads(1);
-  session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
+  g_onnx.init();
 
   rclcpp::init(argc, argv);
   rclcpp::spin(std::make_shared<MinimalSubscriber>());
