@@ -41,13 +41,23 @@ _confidence(0.7f)
 
 }
 
-static std::wstring GetTinyYOLOv2ModelPath()
-{
-    std::string content;
-    std::string prefix_path;
-    ament_index_cpp::get_resource("packages", "object_tracker", content, &prefix_path);
-    return ::to_wstring(prefix_path + "/share/object_tracker/models/tinyyolov2-8.onnx");
-}
+#ifdef _WIN32
+    static std::wstring GetTinyYOLOv2ModelPath()
+    {
+        std::string content;
+        std::string prefix_path;
+        ament_index_cpp::get_resource("packages", "object_tracker", content, &prefix_path);
+        return ::to_wstring(prefix_path + "/share/object_tracker/models/tinyyolov2-8.onnx");
+    }
+#else
+    static std::string GetTinyYOLOv2ModelPath()
+    {
+        std::string content;
+        std::string prefix_path;
+        ament_index_cpp::get_resource("packages", "object_tracker", content, &prefix_path);
+        return prefix_path + "/share/object_tracker/models/tinyyolov2-8.onnx";
+    }
+#endif
 
 void YoloProcessor::init()
 {
@@ -189,7 +199,7 @@ void YoloProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
     // If we found a person, send a message
     for (std::vector<YoloBox>::iterator it = boxes.begin(); it != boxes.end(); ++it)
     {
-        printf("%s\n", it->label);
+        printf("%s\n", it->label.c_str());
     }
 }
 

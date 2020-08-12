@@ -14,13 +14,18 @@ if (NOT TARGET onnxruntime-unofficial::onnxruntime)
     set_target_properties(onnxruntime-unofficial::onnxruntime PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
     )
-    set_target_properties(onnxruntime-unofficial::onnxruntime PROPERTIES
-        IMPORTED_IMPLIB_RELEASE "${_IMPORT_PREFIX}/lib/onnxruntime.lib"
-        IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/bin/onnxruntime.dll"
-    )
-    set_target_properties(onnxruntime-unofficial::onnxruntime PROPERTIES
-        LINK_FLAGS_RELEASE "/DELAYLOAD:onnxruntime.dll"
-    )
+    if(WIN32)
+        set_target_properties(onnxruntime-unofficial::onnxruntime PROPERTIES
+            IMPORTED_IMPLIB_RELEASE "${_IMPORT_PREFIX}/lib/onnxruntime.lib"
+            IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/bin/onnxruntime.dll"
+        )
+    elseif(UNIX)
+        set_target_properties(onnxruntime-unofficial::onnxruntime PROPERTIES
+            IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/lib/libonnxruntime.so.1.4.0"
+        )
+    else()
+        message(FATAL_ERROR "unsupported platform.")
+    endif()
 endif()
 
 list(APPEND onnxruntime_vendor_TARGETS onnxruntime-unofficial::onnxruntime)
