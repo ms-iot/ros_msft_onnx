@@ -33,8 +33,7 @@ static const std::string labels[CLASS_COUNT] =
 
 YoloProcessor::YoloProcessor()
 : _tensorHeight(416),
-_tensorWidth(416),
-_confidence(0.7f)
+_tensorWidth(416)
 {
 
 }
@@ -58,84 +57,18 @@ void YoloProcessor::init(const YoloInitOptions &initOptions)
 #endif
 
     _session = std::make_shared<Ort::Session>(*_env, modelFullPath, session_options);
-
-    //*************************************************************************
-    // print model input layer (node names, types, shape etc.)
     _allocator = std::make_shared<Ort::AllocatorWithDefaultOptions>();
 
-    // print number of model input nodes
-    size_t num_input_nodes = _session->GetInputCount();
-    _input_node_names.resize(num_input_nodes);
-    std::vector<int64_t> input_node_dims;  // simplify... this model has only 1 input node {1, 3, 224, 224}.
-                                            // Otherwise need vector<vector<>>
-
-    printf("Number of inputs = %zu\n", num_input_nodes);
-
-    // iterate over all input nodes
-    for (int i = 0; i < num_input_nodes; i++) {
-        // print input node names
-        char* input_name = _session->GetInputName(i, *_allocator);
-        printf("Input %d : name=%s\n", i, input_name);
-        _input_node_names[i] = input_name;
-
-        // print input node types
-        Ort::TypeInfo type_info = _session->GetInputTypeInfo(i);
-        auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
-
-        ONNXTensorElementDataType type = tensor_info.GetElementType();
-        printf("Input %d : type=%d\n", i, type);
-
-        // print input shapes/dims
-        input_node_dims = tensor_info.GetShape();
-        printf("Input %d : num_dims=%zu\n", i, input_node_dims.size());
-        for (int j = 0; j < input_node_dims.size(); j++)
-            printf("Input %d : dim %d=%jd\n", i, j, input_node_dims[j]);
-    }
-
-    //*************************************************************************
-    // print model output layer (node names, types, shape etc.)
-    size_t num_output_nodes = _session->GetOutputCount();
-    _output_node_names.resize(num_output_nodes);
-    std::vector<int64_t> output_node_dims;  // simplify... this model has only 1 input node {1, 3, 224, 224}.
-                                            // Otherwise need vector<vector<>>
-
-    printf("Number of outputs = %zu\n", num_output_nodes);
-
-    // iterate over all output nodes
-    for (int i = 0; i < num_output_nodes; i++) {
-        // print output node names
-        char* output_name = _session->GetOutputName(i, *_allocator);
-        printf("Output %d : name=%s\n", i, output_name);
-        _output_node_names[i] = output_name;
-
-        // print input node types
-        Ort::TypeInfo type_info = _session->GetOutputTypeInfo(i);
-        auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
-
-        ONNXTensorElementDataType type = tensor_info.GetElementType();
-        printf("Output %d : type=%d\n", i, type);
-
-        // print input shapes/dims
-        output_node_dims = tensor_info.GetShape();
-        printf("Output %d : num_dims=%zu\n", i, output_node_dims.size());
-        for (int j = 0; j < output_node_dims.size(); j++)
-            printf("Output %d : dim %d=%jd\n", i, j, output_node_dims[j]);
-    }
+    DumpParameters();
 }
 
-void YoloProcessor::ProcessImage(const sensor_msgs::msg::Image::SharedPtr image) 
+std::vector<YoloBox> YoloProcessor::ProcessImage(
+    const cv::Mat &image,
+    float confidence_threshold) 
 {
-    // Convert back to an OpenCV Image
-    cv_bridge::CvImagePtr cv_ptr;
-    cv_ptr = cv_bridge::toCvCopy(image, sensor_msgs::image_encodings::BGR8);
-
-    cv::Size s = cv_ptr->image.size();
-    cv::Rect ROI((s.width - _tensorWidth) / 2, (s.height - _tensorHeight) / 2, _tensorWidth, _tensorHeight);
-    cv::Mat image_resized = cv_ptr->image(ROI);
-
     // Convert to RGB
     cv::Mat rgb_image;
-    cv::cvtColor(image_resized, rgb_image, cv::COLOR_BGR2RGB);
+    cv::cvtColor(image, rgb_image, cv::COLOR_BGR2RGB);
 
     // Set the image to 32-bit floating point values for tensorization.
     cv::Mat image_32_bit;
@@ -145,8 +78,7 @@ void YoloProcessor::ProcessImage(const sensor_msgs::msg::Image::SharedPtr image)
     cv::Mat channels[3];
     cv::split(image_32_bit, channels);
 
-    size_t input_tensor_size = _tensorHeight * _tensorWidth * 3;  // simplify ... using known dim values to calculate size
-                                             // use OrtGetTensorShapeElementCount() to get official size!
+    size_t input_tensor_size = _tensorHeight * _tensorWidth * 3;
 
     std::vector<float> input_tensor_values(input_tensor_size);
 
@@ -158,7 +90,6 @@ void YoloProcessor::ProcessImage(const sensor_msgs::msg::Image::SharedPtr image)
     Ort::TypeInfo type_info = _session->GetInputTypeInfo(0);
     auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
     std::vector<int64_t> input_node_dims = {1, 3, 416, 416};
-    //input_node_dims = tensor_info.GetShape();
     Ort::Value input_tensor = Ort::Value::CreateTensor<float>(memory_info, input_tensor_values.data(), input_tensor_size, input_node_dims.data(), input_node_dims.size());
 
     // score model & input tensor, get back output tensor
@@ -175,18 +106,7 @@ void YoloProcessor::ProcessImage(const sensor_msgs::msg::Image::SharedPtr image)
     output.resize(output_total_len);
     memcpy(&output[0], floatarr, output_total_len * sizeof(float));
 
-    ProcessOutput(output, image_resized);
-}
-
-void YoloProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
-{
-    auto boxes = GetRecognizedObjects(output, _confidence);
-
-    // If we found a person, send a message
-    for (std::vector<YoloBox>::iterator it = boxes.begin(); it != boxes.end(); ++it)
-    {
-        printf("%s\n", it->label.c_str());
-    }
+    return GetRecognizedObjects(output, confidence_threshold);
 }
 
 std::vector<YoloBox> YoloProcessor::GetRecognizedObjects(std::vector<float> modelOutputs, float threshold)
@@ -279,4 +199,71 @@ void YoloProcessor::Softmax(std::vector<float> &values)
     float exptot = std::accumulate(values.begin(), values.end(), 0.0);
     std::transform(values.begin(), values.end(), values.begin(),
         [&](float x) { return (float)(x / exptot); });
+}
+
+void YoloProcessor::DumpParameters()
+{
+    //*************************************************************************
+    // print model input layer (node names, types, shape etc.)
+
+    // print number of model input nodes
+    size_t num_input_nodes = _session->GetInputCount();
+    std::vector<const char*> input_node_names;
+    input_node_names.resize(num_input_nodes);
+    std::vector<int64_t> input_node_dims;  // simplify... this model has only 1 input node {1, 3, 224, 224}.
+                                            // Otherwise need vector<vector<>>
+
+    printf("Number of inputs = %zu\n", num_input_nodes);
+
+    // iterate over all input nodes
+    for (int i = 0; i < num_input_nodes; i++) {
+        // print input node names
+        char* input_name = _session->GetInputName(i, *_allocator);
+        printf("Input %d : name=%s\n", i, input_name);
+        input_node_names[i] = input_name;
+
+        // print input node types
+        Ort::TypeInfo type_info = _session->GetInputTypeInfo(i);
+        auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
+
+        ONNXTensorElementDataType type = tensor_info.GetElementType();
+        printf("Input %d : type=%d\n", i, type);
+
+        // print input shapes/dims
+        input_node_dims = tensor_info.GetShape();
+        printf("Input %d : num_dims=%zu\n", i, input_node_dims.size());
+        for (int j = 0; j < input_node_dims.size(); j++)
+            printf("Input %d : dim %d=%jd\n", i, j, input_node_dims[j]);
+    }
+
+    //*************************************************************************
+    // print model output layer (node names, types, shape etc.)
+    size_t num_output_nodes = _session->GetOutputCount();
+    std::vector<const char*> output_node_names;
+    output_node_names.resize(num_output_nodes);
+    std::vector<int64_t> output_node_dims;  // simplify... this model has only 1 input node {1, 3, 224, 224}.
+                                            // Otherwise need vector<vector<>>
+
+    printf("Number of outputs = %zu\n", num_output_nodes);
+
+    // iterate over all output nodes
+    for (int i = 0; i < num_output_nodes; i++) {
+        // print output node names
+        char* output_name = _session->GetOutputName(i, *_allocator);
+        printf("Output %d : name=%s\n", i, output_name);
+        output_node_names[i] = output_name;
+
+        // print input node types
+        Ort::TypeInfo type_info = _session->GetOutputTypeInfo(i);
+        auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
+
+        ONNXTensorElementDataType type = tensor_info.GetElementType();
+        printf("Output %d : type=%d\n", i, type);
+
+        // print input shapes/dims
+        output_node_dims = tensor_info.GetShape();
+        printf("Output %d : num_dims=%zu\n", i, output_node_dims.size());
+        for (int j = 0; j < output_node_dims.size(); j++)
+            printf("Output %d : dim %d=%jd\n", i, j, output_node_dims[j]);
+    }
 }
