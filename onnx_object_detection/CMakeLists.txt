@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(object_tracker)
+project(onnx_object_detection)
 
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
@@ -30,11 +30,11 @@ include_directories(
   include
 )
 
-add_executable(object_tracker
+add_executable(object_detection
   src/main.cpp
   src/yolo_processor.cpp)
 
-ament_target_dependencies(object_tracker
+ament_target_dependencies(object_detection
   ament_index_cpp
   rclcpp
   std_msgs
@@ -51,7 +51,7 @@ install(FILES
   DESTINATION share/${PROJECT_NAME}/models)
 
 install(TARGETS
-  object_tracker
+  object_detection
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY

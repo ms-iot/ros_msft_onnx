@@ -13,6 +13,6 @@ def generate_launch_description():
                 {"rate": 5.0},
             ]),
         launch_ros.actions.Node(
-            package='object_tracker', executable='object_tracker', output='screen',
-            name=['object_tracker']),
+            package='onnx_object_detection', executable='object_detection', output='screen',
+            name=['object_detection']),
     ])

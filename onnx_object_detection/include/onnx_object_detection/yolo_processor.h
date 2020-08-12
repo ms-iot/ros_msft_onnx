@@ -5,6 +5,11 @@
 #include <onnxruntime_cxx_api.h>
 #include <memory>
 
+struct YoloInitOptions
+{
+    std::string modelFullPath;
+};
+
 struct YoloBox
 {
 public:
@@ -17,16 +22,9 @@ class YoloProcessor
 public:
     YoloProcessor();
 
-    void init();
+    void init(const YoloInitOptions &initOptions);
 
     void ProcessImage(const sensor_msgs::msg::Image::SharedPtr image);
-
-    typedef enum 
-    {
-        Scale,
-        Crop,
-        Resize
-    } ImageProcessing;
 
     std::vector<YoloBox> GetRecognizedObjects(std::vector<float> modelOutputs, float threshold = 0.3f);
     void ProcessOutput(std::vector<float> output, cv::Mat& image);
@@ -35,7 +33,6 @@ public:
     void Softmax(std::vector<float> &values);
 
 private:
-    ImageProcessing _process;
     uint32_t _tensorWidth;
     uint32_t _tensorHeight;
     std::shared_ptr<Ort::Env> _env;

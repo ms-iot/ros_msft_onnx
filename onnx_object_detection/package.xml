@@ -3,10 +3,10 @@
   href="http://download.ros.org/schema/package_format2.xsd"
   schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
-  <name>object_tracker</name>
+  <name>onnx_object_detection</name>
   <version>0.0.1</version>
   <description>
-    TinyYOLOv2 Object Tracker
+    TinyYOLOv2 Object Detection
   </description>
   <maintainer email="seanyen@microsoft.com">Sean Yen</maintainer>
   <license>MIT</license>
