@@ -1,7 +1,6 @@
 #include <rclcpp/rclcpp.hpp>
-#include <object_tracker/yolo_processor.h>
+#include <onnx_object_detection/yolo_processor.h>
 #include <sensor_msgs/image_encodings.hpp>
-#include <ament_index_cpp/get_resource.hpp>
 
 #include <string>
 #include <codecvt>
@@ -33,33 +32,14 @@ static const std::string labels[CLASS_COUNT] =
 };
 
 YoloProcessor::YoloProcessor()
-: _process(ImageProcessing::Scale),
-_tensorHeight(416),
+: _tensorHeight(416),
 _tensorWidth(416),
 _confidence(0.7f)
 {
 
 }
 
-#ifdef _WIN32
-    static std::wstring GetTinyYOLOv2ModelPath()
-    {
-        std::string content;
-        std::string prefix_path;
-        ament_index_cpp::get_resource("packages", "object_tracker", content, &prefix_path);
-        return ::to_wstring(prefix_path + "/share/object_tracker/models/tinyyolov2-8.onnx");
-    }
-#else
-    static std::string GetTinyYOLOv2ModelPath()
-    {
-        std::string content;
-        std::string prefix_path;
-        ament_index_cpp::get_resource("packages", "object_tracker", content, &prefix_path);
-        return prefix_path + "/share/object_tracker/models/tinyyolov2-8.onnx";
-    }
-#endif
-
-void YoloProcessor::init()
+void YoloProcessor::init(const YoloInitOptions &initOptions)
 {
     //*************************************************************************
     // initialize  enviroment...one enviroment per process
@@ -71,7 +51,13 @@ void YoloProcessor::init()
     session_options.SetIntraOpNumThreads(1);
     session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
 
-    _session = std::make_shared<Ort::Session>(*_env, GetTinyYOLOv2ModelPath().c_str(), session_options);
+#ifdef _WIN32
+    auto modelFullPath = ::to_wstring(initOptions.modelFullPath).c_str();
+#else
+    auto modelFullPath = initOptions.modelFullPath.c_str();
+#endif
+
+    _session = std::make_shared<Ort::Session>(*_env, modelFullPath, session_options);
 
     //*************************************************************************
     // print model input layer (node names, types, shape etc.)
