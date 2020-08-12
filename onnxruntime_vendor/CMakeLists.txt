@@ -4,9 +4,9 @@ project(onnxruntime_vendor)
 find_package(ament_cmake REQUIRED)
 
 file(DOWNLOAD
-    https://github.com/microsoft/onnxruntime/releases/download/v1.4.0/onnxruntime-win-x64-1.4.0.zip
-    ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime-win-x64-1.4.0.zip
-    EXPECTED_HASH SHA512=fb146395efd53af7dbb659a4eef2c373d9bf1a7f59b7d73af8c07fce7082b8ba6ce9d84eac55584105352bce63fed531fbb8ab77db8dd9499e09dd48fd5dbccc
+https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime/1.4.0
+    ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime-1.4.0.nuget
+    EXPECTED_HASH SHA512=cbff106bb1f114ee1d510b594abb487e9f965b7b7a3f37b92846013eb086126a4cd69eb4564717fe1acf04d4399d1fcd0a52c3ca508f330e91a3e5d0fe560ca3
     SHOW_PROGRESS
 )
 
@@ -14,32 +14,39 @@ file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/onnxruntime")
 
 add_custom_target(Extract ALL
     ${CMAKE_COMMAND} -E
-    tar xvzf "${CMAKE_CURRENT_BINARY_DIR}/onnxruntime-win-x64-1.4.0.zip"
+    tar xvzf "${CMAKE_CURRENT_BINARY_DIR}/onnxruntime-1.4.0.nuget"
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/onnxruntime"
 )
 
 install(
-    DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/onnxruntime-win-x64-1.4.0/include/
+    DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/build/native/include/
     DESTINATION include
 )
 
 install(
     FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/onnxruntime-win-x64-1.4.0/lib/onnxruntime.dll
-        ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/onnxruntime-win-x64-1.4.0/lib/onnxruntime.pdb
+        ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/runtimes/win-x64/native/onnxruntime.dll
+        ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/runtimes/win-x64/native/onnxruntime.pdb
     DESTINATION bin
 )
 
 install(
     FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/onnxruntime-win-x64-1.4.0/lib/onnxruntime.lib
+        ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/runtimes/win-x64/native/onnxruntime.lib
     DESTINATION lib
 )
 
 install(
     FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/onnxruntime-win-x64-1.4.0/LICENSE
-        ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/onnxruntime-win-x64-1.4.0/ThirdPartyNotices.txt
+        ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/runtimes/linux-x64/native/libonnxruntime.so
+    DESTINATION lib
+    RENAME libonnxruntime.so.1.4.0
+)
+
+install(
+    FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/LICENSE.txt
+        ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/ThirdPartyNotices.txt
     DESTINATION share/${PROJECT_NAME}
 )
 
