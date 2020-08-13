@@ -11,7 +11,35 @@ This repository demonstrates that by enabling the same code with ROS 2 to run on
 ## System Requirement
 
   * Microsoft Windows 10 64-bit or Ubuntu 20.04 LTS x86_64
-  * To make use of hardware acceleration, the system is required to be compatible with **CUDA 10.1** and **cuDNN 7.6.5**.
+  * To make use of the hardware acceleration, the system is required to be compatible with [**CUDA 10.1**](https://developer.nvidia.com/cuda-toolkit) and [**cuDNN 7.6.5**](https://developer.nvidia.com/cudnn).
+
+> For GPU support, please follow the installation steps on NVIDIA portal before proceeding.
+
+## How to Build
+
+ONNX Runtime team is releasing different binaries for CPU and GPU (CUDA) support. To switch between the two, a workspace rebuild is required.
+
+* Default CPU
+
+```Batchfile
+mkdir colcon_ws\src
+cd colcon_ws
+
+wget https://raw.githubusercontent.com/ms-iot/ros_msft_onnx/master/onnx.repos
+vcs import src < onnx.repos
+colcon build --cmake-args -DCUDA_SUPPORT=OFF
+```
+
+* Default GPU (CUDA)
+
+```Batchfile
+mkdir colcon_ws\src
+cd colcon_ws
+
+wget https://raw.githubusercontent.com/ms-iot/ros_msft_onnx/master/onnx.repos
+vcs import src < onnx.repos
+colcon build --cmake-args -DCUDA_SUPPORT=ON
+```
 
 ## Samples Lists
 
