@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 cmake_minimum_required(VERSION 3.5)
 
 project(onnx_object_detection)
@@ -16,6 +19,7 @@ find_package(ament_index_cpp REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(onnxruntime_vendor REQUIRED)
 
@@ -39,6 +43,7 @@ ament_target_dependencies(object_detection
   rclcpp
   std_msgs
   sensor_msgs
+  visualization_msgs
   cv_bridge
   onnxruntime_vendor)
 
@@ -56,6 +61,11 @@ install(TARGETS
 
 install(DIRECTORY
   launch
+  DESTINATION share/${PROJECT_NAME}/
+)
+
+install(DIRECTORY
+  rviz
   DESTINATION share/${PROJECT_NAME}/
 )
 
