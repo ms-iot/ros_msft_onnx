@@ -2,7 +2,17 @@
 
 Tiny-YOLOv2 is a real-time neural network for object detection that detects 20 different classes. It is made up of 9 convolutional layers and 6 max-pooling layers and is a smaller version of the more complex full YOLOv2 network.
 
-This package demonstrates using ONNX Runtime to run Tiny-YOLOv2 against a image stream, and outputing the images annotated with bounding boxes.
+This sample demonstrates using ONNX Runtime to run Tiny-YOLOv2 against a image stream, and outputing the images annotated with bounding boxes.
+
+## Getting Started
+
+To run this sample, a camera will be required to be installed and ready to use on your system.
+
+You can begin with the below launch file. It will bring up RViz tool where you can observe the interaction between `object_detection` and `cv_camera` nodes.
+
+```Batchfile
+ros2 launch onnx_object_detection object_detection.launch.py
+```
 
 ## Subscribed Topics
 

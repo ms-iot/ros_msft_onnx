@@ -13,7 +13,6 @@ This repository demonstrates that by enabling the same code with ROS 2 to run on
   * Microsoft Windows 10 64-bit or Ubuntu 20.04 LTS x86_64
   * To make use of hardware acceleration, the system is required to be compatible with **CUDA 10.1** and **cuDNN 7.6.5**.
 
-
 ## Samples Lists
 
   * [Object Detection with Tiny-YOLOv2/ONNX Runtime](./onnx_object_detection/README.md)
