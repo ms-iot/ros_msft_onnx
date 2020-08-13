@@ -1,6 +1,6 @@
 # Object Detection with Tiny-YOLOv2/ONNX Runtime
 
-Tiny-YOLOv2 is a real-time neural network for object detection that detects 20 different classes. It is made up of 9 convolutional layers and 6 max-pooling layers and is a smaller version of the more complex full YOLOv2 network.
+[Tiny-YOLOv2](https://github.com/onnx/models/tree/master/vision/object_detection_segmentation/tiny-yolov2) is a real-time neural network for object detection that detects 20 different classes. It is made up of 9 convolutional layers and 6 max-pooling layers and is a smaller version of the more complex full [YOLOv2](https://pjreddie.com/darknet/yolov2/) network.
 
 This sample demonstrates using ONNX Runtime to run Tiny-YOLOv2 against a image stream, and outputing the images annotated with bounding boxes.
 
