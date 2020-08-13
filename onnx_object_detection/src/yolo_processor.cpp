@@ -1,10 +1,12 @@
-#include <rclcpp/rclcpp.hpp>
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 #include <onnx_object_detection/yolo_processor.h>
-#include <sensor_msgs/image_encodings.hpp>
 
 #include <string>
 #include <codecvt>
 #include <locale>
+#include <numeric>
 
 using convert_t = std::codecvt_utf8<wchar_t>;
 std::wstring_convert<convert_t, wchar_t> strconverter;

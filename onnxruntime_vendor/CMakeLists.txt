@@ -1,4 +1,7 @@
-cmake_minimum_required(VERSION 3.15.3)
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+cmake_minimum_required(VERSION 3.5)
 project(onnxruntime_vendor)
 
 find_package(ament_cmake REQUIRED)

@@ -1,7 +1,9 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 #pragma once
 
 #include <cv_bridge/cv_bridge.h>
-#include <sensor_msgs/msg/image.hpp>
 #include <onnxruntime_cxx_api.h>
 #include <memory>
 
