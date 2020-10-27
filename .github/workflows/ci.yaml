@@ -20,7 +20,7 @@ jobs:
     - uses: ros-tooling/setup-ros@0.0.15
     - uses: ros-tooling/action-ros-ci@master
       with:
-        package-name: <ros package>
+        package-name: ros_msft_onnx
     - uses: actions/upload-artifact@v1
       with:
         name: drop
