@@ -1,43 +1,27 @@
-name: CI
+name: Build
 on:
   pull_request:
   push:
     branches:
       - master
   schedule:
-    # every Monday
-    - cron:  '0 0 * * 1'
+    # Run every hour. This helps detect flakiness,
+    # and broken external dependencies.
+    - cron:  '0 * * * *'
 
 jobs:
-  build:
-    runs-on: [windows-latest]
+  build_and_test:
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        ROSDISTRO: [foxy]
+          os: [ubuntu-latest, windows-latest]
     steps:
-    - uses: actions/checkout@v2
+    - uses: ros-tooling/setup-ros@0.0.15
+    - uses: ros-tooling/action-ros-ci@master
       with:
-        submodules: recursive
-        path: src
-    - name: Install
-      shell: cmd
-      run: |
-        choco sources add -n=roswin -s https://aka.ms/ros/public --priority 1
-        choco install ros-%ROSDISTRO%-desktop -y --no-progress
-      env:
-        ROSDISTRO: ${{ matrix.ROSDISTRO }}
-    - name: Build
-      shell: cmd
-      run: |
-        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64
-        call "C:\opt\ros\%ROSDISTRO%\x64\setup.bat"
-
-        pushd src
-        git clone -b ros2 https://github.com/ros-perception/image_common.git
-        git clone -b ros2 https://github.com/ros-perception/vision_opencv.git
-        popd
-
-        colcon build --cmake-args -DCUDA_SUPPORT=ON
-      env:
-        ROSDISTRO: ${{ matrix.ROSDISTRO }}
+        package-name: <ros package>
+    - uses: actions/upload-artifact@v1
+      with:
+        name: drop
+        path: c:\opt\install
