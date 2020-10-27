@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ROSDISTRO: [melodic, noetic]
+        ROSDISTRO: [foxy]
     steps:
     - uses: actions/checkout@v2
       with:
@@ -24,7 +24,7 @@ jobs:
       shell: cmd
       run: |
         choco sources add -n=roswin -s https://aka.ms/ros/public --priority 1
-        choco install ros-%ROSDISTRO%-desktop_full -y --no-progress
+        choco install ros-%ROSDISTRO%-desktop -y --no-progress
       env:
         ROSDISTRO: ${{ matrix.ROSDISTRO }}
     - name: Build
@@ -32,6 +32,12 @@ jobs:
       run: |
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64
         call "C:\opt\ros\%ROSDISTRO%\x64\setup.bat"
-        catkin_make -DPYTHON_EXECUTABLE=C:\opt\ros\%ROSDISTRO%\x64\python.exe
+
+        pushd src
+        git clone -b ros2 https://github.com/ros-perception/image_common.git
+        git clone -b ros2 https://github.com/ros-perception/vision_opencv.git
+        popd
+
+        colcon build --cmake-args -DCUDA_SUPPORT=ON
       env:
         ROSDISTRO: ${{ matrix.ROSDISTRO }}
