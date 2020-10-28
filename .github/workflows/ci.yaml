@@ -16,7 +16,7 @@ jobs:
     - uses: ros-tooling/setup-ros@master
     - uses: ros-tooling/action-ros-ci@master
       with:
-        package-name: ros_msft_onnx
+        package-name: onnx_object_detection
         target-ros2-distro: foxy
     - uses: actions/upload-artifact@v1
       with:
