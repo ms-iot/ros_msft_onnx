@@ -13,7 +13,7 @@ jobs:
       matrix:
           os: [ubuntu-latest, windows-latest]
     steps:
-    - uses: ros-tooling/setup-ros@0.0.15
+    - uses: ros-tooling/setup-ros@master
     - uses: ros-tooling/action-ros-ci@master
       with:
         package-name: ros_msft_onnx
