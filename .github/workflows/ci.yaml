@@ -18,6 +18,7 @@ jobs:
     steps:
     - uses: ros-tooling/setup-ros@master
     - run: |
+        tree -a
         mkdir -p ${GITHUB_WORKSPACE}/ros_ws/src/
         pushd ${GITHUB_WORKSPACE}/ros_ws/src/
         git clone -b master https://github.com/Kapernikov/cv_camera.git
