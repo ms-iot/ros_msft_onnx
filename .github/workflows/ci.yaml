@@ -17,18 +17,11 @@ jobs:
           os: [ubuntu-latest, windows-latest]
     steps:
     - uses: ros-tooling/setup-ros@master
-    - run: |
-        ls -R
-        mkdir -p ${GITHUB_WORKSPACE}/ros_ws/src/
-        pushd ${GITHUB_WORKSPACE}/ros_ws/src/
-        git clone -b master https://github.com/Kapernikov/cv_camera.git
-        git clone -b ros2 https://github.com/ros-perception/image_common.git
-        git clone -b ros2 https://github.com/ros-perception/vision_opencv.git
-        popd
     - uses: ros-tooling/action-ros-ci@master
       with:
         package-name: onnx_object_detection
         target-ros2-distro: foxy
+        vcs-repo-file-url: https://raw.githubusercontent.com/ms-iot/ros_msft_onnx/master/onnx.repos
     - uses: actions/upload-artifact@v1
       with:
         name: drop
