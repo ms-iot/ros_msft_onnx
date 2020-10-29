@@ -18,7 +18,7 @@ jobs:
       with:
         package-name: onnx_object_detection
         target-ros2-distro: foxy
-        vcs-repo-file-url: onnx.repos
+        vcs-repo-file-url: src/onnx.repos
     - uses: actions/upload-artifact@v1
       with:
         name: drop
