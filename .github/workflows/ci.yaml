@@ -15,9 +15,8 @@ jobs:
     steps:
     - uses: ros-tooling/setup-ros@master
     - run: |
-        export
-        mkdir src
-        pushd src
+        mkdir $(GITHUB_WORKSPACE)/ros_ws/src/
+        pushd $(GITHUB_WORKSPACE)/ros_ws/src/
         git clone -b master https://github.com/Kapernikov/cv_camera.git
         git clone -b ros2 https://github.com/ros-perception/image_common.git
         git clone -b ros2 https://github.com/ros-perception/vision_opencv.git
