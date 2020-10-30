@@ -11,10 +11,6 @@ repositories:
     type: git
     url: https://github.com/ros-perception/vision_opencv.git
     version: ros2
-  ros_msft_onnx:
-    type: git
-    url: https://github.com/ms-iot/ros_msft_onnx.git
-    version: master
   ament/ament_cmake:
     type: git
     url: https://github.com/ament/ament_cmake.git
