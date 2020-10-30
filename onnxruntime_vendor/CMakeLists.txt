@@ -10,7 +10,8 @@ option(CUDA_SUPPORT "use CUDA support onnxruntime library" ON)
 
 # disable Cuda build on github ci
 if(DEFINED ENV{GITHUB_WORKSPACE})
-set(CUDA_SUPPORT, OFF)
+    message(STATUS, "Detected Github CI, building without CUDA")
+    set(CUDA_SUPPORT, OFF)
 endif()
 
 if(CUDA_SUPPORT)
