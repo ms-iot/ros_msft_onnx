@@ -1,8 +1,4 @@
 repositories:
-  cv_camera:
-    type: git
-    url: https://github.com/Kapernikov/cv_camera.git
-    version: master
   image_common:
     type: git
     url: https://github.com/ros-perception/image_common.git
