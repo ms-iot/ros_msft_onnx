@@ -48,10 +48,6 @@ ament_target_dependencies(object_detection
   onnxruntime_vendor)
 
 install(FILES
-  $<TARGET_FILE:onnxruntime-unofficial::onnxruntime>
-  DESTINATION lib/${PROJECT_NAME})
-
-install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/models/tinyyolov2-8.onnx
   DESTINATION share/${PROJECT_NAME}/models)
 
