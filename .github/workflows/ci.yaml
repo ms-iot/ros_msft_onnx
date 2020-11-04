@@ -21,4 +21,5 @@ jobs:
       with:
         package-name: onnx_object_detection
         target-ros2-distro: foxy
+        vcs-repo-file-url: https://raw.githubusercontent.com/ooeygui/ros_msft_onnx/master/.github/ci.repos
 
