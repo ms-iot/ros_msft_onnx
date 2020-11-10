@@ -1,0 +1,5 @@
+<launch>
+  <!-- NOTE: The image properties need to be valid for the camera, or the node will auto select the closest values -->
+  <node pkg="winml_tracker" type="winml_tracker" name="winml_tracker" />
+  <test test-name="winml_tracker_testnode" pkg="winml_tracker" type="winml_tracker_testnode" />
+</launch>

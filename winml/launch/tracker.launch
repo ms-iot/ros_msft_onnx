@@ -1,0 +1,23 @@
+<launch>
+  <arg name="onnx_model_path_arg" default="$(find winml_tracker)/testdata/model.onnx"/>
+  <node pkg="winml_tracker" type="winml_tracker_node" name="winml_tracker" output="screen">
+    <param name="onnx_model_path" value="$(arg onnx_model_path_arg)"/>
+    <param name="confidence" value="0.5"/>
+    <param name="tensor_width" value="416"/>
+    <param name="tensor_height" value="416"/>
+    <param name="tracker_type" value="yolo"/>
+    <param name="image_processing" value="resize"/>
+    <param name="debug" value="true"/>
+  </node>
+  
+  <!-- NOTE: The image properties need to be valid for the camera, or the node will auto select the closest values -->
+  <node pkg="cv_camera" type="cv_camera_node" name="cv_camera" output="screen">
+    <param name="rate" type="double" value="5.0"/>
+    <param name="image_width" type="double" value="640"/>
+    <param name="image_height" type="double" value="480"/>
+  </node>
+
+  <node pkg="tf" type="static_transform_publisher" name="winml_link"
+    args="0 -0.02  0 0 0 0 map base_link 100" />  
+
+</launch>

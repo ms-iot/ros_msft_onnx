@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>winml_tracker</name>
+  <version>1.0.0</version>
+  <description>The winml_tracker package</description>
+  <maintainer email="stscha@microsoft.com">Stuart Schaefer</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>eigen</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>visualization_msgs</depend>
+  <depend>winml_msgs</depend>
+  <depend>cv_bridge</depend>
+  <depend>roscpp</depend>
+  <depend>tf</depend>
+  <depend>image_transport</depend>
+
+  <test_depend>rosunit</test_depend>
+  <export>
+  </export>
+</package>

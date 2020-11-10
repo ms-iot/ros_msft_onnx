@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>WinML</id>
+    <version>1.0.0</version>
+    <title>WinML ROS package</title>
+    <authors>Lou Amadio</authors>
+    <licenseUrl>https://github.com/ms-iot/winml_tracker/License.txt</licenseUrl>
+    <projectUrl>https://github.com/ms-iot/winml_tracker</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>WinML for ROS on Windows.</description>
+    <summary>WinML packaged as a rosdep.</summary>
+    <tags>ros WinML</tags>
+    <packageSourceUrl>http://www.github.com/MyOrg/MyPackage</packageSourceUrl>
+    <docsUrl>http://www.github.com/MyOrg/MyPackage/Docs</docsUrl>
+  </metadata>
+</package>

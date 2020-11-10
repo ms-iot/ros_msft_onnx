@@ -1,0 +1,27 @@
+<launch>
+  <!-- Path to a YOLO model. -->
+  <!-- It can be downloaded from https://www.cntk.ai/OnnxModels/tiny_yolov2/opset_7/tiny_yolov2.tar.gz -->
+  <arg name="onnx_model_path_arg" default="$(find winml_tracker)/testdata/shoe.onnx"/>
+  <arg name="model_bounds_arg" default="[-4.57, -10.50, -13.33, 5.54, -10.50, -13.33, 5.54, 0.00, -13.33, -4.57, 0.00, -13.33, -4.57, -10.50, 13.73, 5.54, -10.50, 13.73, 5.54, 0.00, 13.73, -4.57, 0.00, 13.73, 0.48, -5.25, 0.20]"/>
+  <arg name="tracker_type_arg" default="pose"/>
+
+  <arg name="mesh_resource_arg" default="package://winml_tracker/testdata/shoe.dae"/>
+
+  <node pkg="winml_tracker" type="winml_tracker_node" name="winml_tracker" output="screen">
+    <param name="onnx_model_path" value="$(arg onnx_model_path_arg)"/>
+    <param name="model_bounds" type="yaml" value="$(arg model_bounds_arg)"/>
+    <param name="tracker_type" value="$(arg tracker_type_arg)"/>
+    <param name="mesh_resource" value="$(arg mesh_resource_arg)"/>
+  </node>
+  
+  <!-- NOTE: The image properties need to be valid for the camera, or the node will auto select the closest values -->
+  <node pkg="cv_camera" type="cv_camera_node" name="cv_camera" output="screen">
+    <param name="rate" type="double" value="5.0"/>
+    <param name="image_width" type="double" value="640"/>
+    <param name="image_height" type="double" value="480"/>
+  </node>
+
+  <node pkg="tf" type="static_transform_publisher" name="winml_link"
+    args="0 -0.02  0 0 0 0 map base_link 100" />  
+
+</launch>

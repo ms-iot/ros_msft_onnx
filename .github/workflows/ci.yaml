@@ -1,0 +1,37 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+  schedule:
+    # every Monday
+    - cron:  '0 0 * * 1'
+
+jobs:
+  build:
+    runs-on: [windows-latest]
+    strategy:
+      fail-fast: false
+      matrix:
+        ROSDISTRO: [melodic, noetic]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+        path: src
+    - name: Install
+      shell: cmd
+      run: |
+        choco sources add -n=roswin -s https://aka.ms/ros/public --priority 1
+        choco install ros-%ROSDISTRO%-desktop_full -y --no-progress
+      env:
+        ROSDISTRO: ${{ matrix.ROSDISTRO }}
+    - name: Build
+      shell: cmd
+      run: |
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64
+        call "C:\opt\ros\%ROSDISTRO%\x64\setup.bat"
+        catkin_make -DPYTHON_EXECUTABLE=C:\opt\ros\%ROSDISTRO%\x64\python.exe
+      env:
+        ROSDISTRO: ${{ matrix.ROSDISTRO }}

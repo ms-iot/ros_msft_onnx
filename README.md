@@ -1,49 +1,98 @@
-# ROS 2 with ONNX Runtime
+# Windows ML ROS Node
 
-<p align="center"><img width="50%" src="docs/images/ONNX_Runtime_logo_dark.png" /></p>
+![](https://github.com/ms-iot/winml_tracker/workflows/winml_tracker%20CI/badge.svg)
 
-[ONNX Runtime](https://github.com/microsoft/onnxruntime) is an open source inference engine for ONNX Models.
-ONNX Runtime Execution Providers (EPs) enables the execution of any ONNX model using a single set of inference APIs that provide access to the best hardware acceleration available.
+The AI platform in Windows 10 enables developers to use pre-trained machine learning models in their Apps on Windows devices. This offers developers a number of benefits:
 
-In simple terms, developers no longer need to worry about the nuances of hardware specific custom libraries to accelerate their machine learning models.
-This repository demonstrates that by enabling the same code with ROS 2 to run on different hardware platforms using their respective AI acceleration libraries for optimized execution of the ONNX model.
+* Low latency, real-time results. Windows can perform AI evaluation tasks using the local processing capabilities of the PC, enabling real-time analysis of large local data such as images and video. Results can be delivered quickly and efficiently for use in performance intensive workloads like game engines, or background tasks such as indexing for search.
 
-## System Requirement
+* Reduced operational costs. Together with Microsoft’s Cloud AI platform, developers can build affordable, end-to-end AI solutions that combine training models in Azure with deployment to Windows devices for evaluation. Significant savings can be realized by reducing or eliminating costs associated with bandwidth due to ingestion of large data sets, such as camera footage or sensor telemetry. Complex workloads can be processed in real-time on the edge, with minimal sample data sent to the cloud for improved training on observations.
 
-  * Microsoft Windows 10 64-bit or Ubuntu 20.04 LTS x86_64
-  * To make use of the hardware acceleration, the system is required to be compatible with [**CUDA 10.1**](https://developer.nvidia.com/cuda-toolkit) and [**cuDNN 7.6.5**](https://developer.nvidia.com/cudnn).
+* Flexibility. Developers can choose to perform AI tasks on device or in the cloud based on what their customers & scenarios need. AI processing can happen on the device if it becomes disconnected, or in scenarios where data cannot be sent to the cloud due to cost, size, policy or customer preference. 
 
-> For GPU support, please follow the installation steps on NVIDIA portal before proceeding.
+## Consuming WinML
+Requirements:
 
-## How to Build
+* Install Visual Studio 2019 with UWP development
+* ROS melodic for Windows
 
-ONNX Runtime team is releasing different binaries for CPU and GPU (CUDA) support. To switch between the two, a workspace rebuild is required.
 
-* Default CPU
+The WinML ROS Node is distrubted as source. To consume it in your robot, clone the winml_tracker sources into your workspace.
 
-```Batchfile
-mkdir colcon_ws\src
-cd colcon_ws
-
-wget https://raw.githubusercontent.com/ms-iot/ros_msft_onnx/master/onnx.repos
-vcs import src < onnx.repos
-colcon build --cmake-args -DCUDA_SUPPORT=OFF
-```
-
-* Default GPU (CUDA)
+For example:
 
 ```Batchfile
-mkdir colcon_ws\src
-cd colcon_ws
-
-wget https://raw.githubusercontent.com/ms-iot/ros_msft_onnx/master/onnx.repos
-vcs import src < onnx.repos
-colcon build --cmake-args -DCUDA_SUPPORT=ON
+mkdir c:\workspace\winml_demo\src
+cd c:\workspace\winml_demo\src
+catkin_init_workspace
+git clone https://github.com/ms-iot/winml_tracker
 ```
 
-## Samples Lists
+Create a Launch file, which references the model.onnx file:
 
-  * [Object Detection with Tiny-YOLOv2/ONNX Runtime](./onnx_object_detection/README.md)
+```xml
+<launch>
+  <arg name="onnx_model_path_arg" default="$(find winml_tracker)/testdata/model.onnx"/>
+  <node pkg="winml_tracker" type="winml_tracker_node" name="winml_tracker" output="screen">
+    <param name="onnx_model_path" value="$(arg onnx_model_path_arg)"/>
+    <param name="confidence" value="0.5"/>
+    <param name="tensor_width" value="416"/>
+    <param name="tensor_height" value="416"/>
+    <param name="tracker_type" value="yolo"/>
+    <param name="image_processing" value="resize"/>
+    <param name="debug" value="true"/>
+    <param name="image_topic" value="/cv_camera/image_raw" />
+  </node>
+  
+  <!-- NOTE: The image properties need to be valid for the camera, or the node will auto select the closest values -->
+  <node pkg="cv_camera" type="cv_camera_node" name="cv_camera" output="screen">
+    <param name="rate" type="double" value="5.0"/>
+    <param name="image_width" type="double" value="640"/>
+    <param name="image_height" type="double" value="480"/>
+  </node>
+
+  <node pkg="tf" type="static_transform_publisher" name="winml_link"
+    args="0 -0.02  0 0 0 0 map base_link 100" />  
+
+</launch>
+```
+
+> While 'Pose' processing is enabled, the service required to generate the model has not been published as of October 2020
+ 
+
+## Property Descriptions
+
+| Property | Description |
+|----------| ------------|
+| onnx_model_path | Path to the model.onnx file | 
+| confidence | Minimum confidence before publishing an event. 0 to 1 |
+| tensor_width| The Width of the input to the model. |
+| tensor_height| The Height of the input to the model. |
+| tracker_type| Currently enabled - `yolo` or `pose`. |
+| image_processing| `resize`, `scale` or `crop` |
+| debug| `true` or `false` determines if a debug image is published |
+| image_topic| The image topic to subscribe to |
+| label | used to filter the found object to a specific label |
+| mesh_rotation| The orientation of the mesh when debug rendering pose |
+| mesh_scale| The scale of the mesh when debug rendering pose |
+| mesh_resource| The mesh used for debug rendering pose |
+| model_bounds| 9 coordinates used to perform the point in perspective caluclation for pose |
+| calibration | Path to the OpenCV calibration file for point in persective |
+
+## Subscriptions
+WinML subscribes to the topic listed in the `image_topic` property, or `/cv_camera/image_raw`
+
+## Publishing
+The WinML Publishes the following topics:
+
+### /tracked_objects/image
+Outputs an image with highlighing if the debug property is set
+
+### /tracked_objects/
+An array of `visualization_msgs::Marker` for found objects
+
+### /detected_object
+A single instance of the DetectedObjectPose message, which is output when tracker_type is set to pose.
 
 # Contributing
 
