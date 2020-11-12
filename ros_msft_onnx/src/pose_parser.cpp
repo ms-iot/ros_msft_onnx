@@ -12,9 +12,9 @@
 #include <winrt/Windows.Storage.h>
 #include <winrt/Windows.Graphics.h>
 #include <winrt/Windows.Graphics.Imaging.h>
-#include "winml_tracker/winml_tracker.h"
-#include "winml_tracker/pose_parser.h"
-#include "winml_msgs/DetectedObjectPose.h"
+#include "ros_msft_onnx/ros_msft_onnx.h"
+#include "ros_msft_onnx/pose_parser.h"
+#include "ros_msft_onnx_msgs/DetectedObjectPose.h"
 
 #define EIGEN_DEFAULT_IO_FORMAT Eigen::IOFormat(10)
 #include <Eigen/Eigen>
@@ -61,7 +61,7 @@ bool PoseProcessor::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
 {
     initPoseTables();
 
-    WinMLProcessor::init(nh, nhPrivate);
+    OnnxProcessor::init(nh, nhPrivate);
     _channelCount = CHANNEL_COUNT;
     _rowCount = ROW_COUNT;
     _colCount = COL_COUNT;
@@ -102,7 +102,7 @@ bool PoseProcessor::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
             modelBounds.push_back(cv::Point3d(points[p], points[p + 1], points[p + 2]));
         }
 
-        _detect_pose_pub = nh.advertise<winml_msgs::DetectedObjectPose>("detected_object", 1);
+        _detect_pose_pub = nh.advertise<ros_msft_onnx_msgs::DetectedObjectPose>("detected_object", 1);
 
         return true;
     }
@@ -173,7 +173,7 @@ void PoseProcessor::initMarker(visualization_msgs::Marker& marker, int32_t id, i
 {
     marker.header.frame_id = _linkName;
     marker.header.stamp = ros::Time();
-    marker.ns = "winml";
+    marker.ns = "onnx";
     marker.id = id;
     marker.type = type;
     marker.action = visualization_msgs::Marker::ADD;
@@ -224,7 +224,7 @@ void PoseProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
         visualization_msgs::Marker marker;
         marker.header.frame_id = _linkName;
         marker.header.stamp = ros::Time();
-        marker.ns = "winml";
+        marker.ns = "onnx";
         marker.id = 0;
         marker.type = visualization_msgs::Marker::MESH_RESOURCE;
         marker.action = visualization_msgs::Marker::ADD;
@@ -313,7 +313,7 @@ void PoseProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
             tf::quaternionTFToMsg(poseQuat, marker.pose.orientation);
             markers.push_back(marker);
 
-            winml_msgs::DetectedObjectPose doPose;
+            ros_msft_onnx_msgs::DetectedObjectPose doPose;
 
             doPose.header.frame_id = _linkName;
             doPose.header.stamp = ros::Time();

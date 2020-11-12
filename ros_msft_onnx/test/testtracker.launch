@@ -1,0 +1,5 @@
+<launch>
+  <!-- NOTE: The image properties need to be valid for the camera, or the node will auto select the closest values -->
+  <node pkg="ros_msft_onnx" type="ros_msft_onnx" name="ros_msft_onnx" />
+  <test test-name="ros_msft_onnx_testnode" pkg="ros_msft_onnx" type="ros_msft_onnx_testnode" />
+</launch>

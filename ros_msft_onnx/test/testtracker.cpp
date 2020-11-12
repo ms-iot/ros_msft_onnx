@@ -11,8 +11,8 @@
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.AI.MachineLearning.h>
 
-#include <winml_tracker/winml_tracker.h>
-#include <winml_tracker/pose_parser.h>
+#include <ros_msft_onnx/ros_msft_onnx.h>
+#include <ros_msft_onnx/pose_parser.h>
 
 #include <string>
 #include <codecvt>
@@ -61,7 +61,7 @@ TEST(TrackerTester, poseTest)
     image_transport::Publisher image_pub;
     image_pub = it.advertise("debug/image", 1, true);
     ros::Subscriber sub = nh.subscribe("tracked_objects", 0, &MarkerHelper::cb, &mh);
-    cv::Mat image_data = cv::imread( "C:\\ws\\eden_ws\\src\\winml_tracker\\testdata\\sample_image_1.JPG");
+    cv::Mat image_data = cv::imread( "C:\\ws\\eden_ws\\src\\ros_msft_onnx\\testdata\\sample_image_1.JPG");
 
     sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image_data).toImageMsg();
     EXPECT_TRUE(nullptr != msg);
@@ -82,7 +82,7 @@ TEST(TrackerTester, poseTest)
     };
 
     nh.setParam("model_bounds", bounds);
-    nh.setParam("onnx_model_path", "C:\\ws\\eden_ws\\src\\winml_tracker\\testdata\\shoe.onnx");
+    nh.setParam("onnx_model_path", "C:\\ws\\eden_ws\\src\\ros_msft_onnx\\testdata\\shoe.onnx");
 
     pose::PoseProcessor poseP;
     poseP.init(nh, nh);

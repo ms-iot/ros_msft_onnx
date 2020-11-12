@@ -1,9 +1,9 @@
 #pragma once
 
-class WinMLProcessor
+class OnnxProcessor
 {
 public:
-    WinMLProcessor();
+    OnnxProcessor();
 
     void ProcessImage(const sensor_msgs::ImageConstPtr& image);
 
@@ -60,15 +60,15 @@ protected:
 
 };
 
-class WinMLTracker
+class OnnxTracker
 {
     ros::NodeHandle _nh;
     ros::NodeHandle _nhPrivate;
 
-    std::shared_ptr<WinMLProcessor> _processor;
+    std::shared_ptr<OnnxProcessor> _processor;
 
 public:
-    WinMLTracker() { };
+    OnnxTracker() { };
 
     bool init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate);
     bool shutdown();

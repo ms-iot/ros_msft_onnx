@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "winml_tracker.h"
+#include "ros_msft_onnx.h"
 
 namespace yolo
 {
@@ -14,7 +14,7 @@ namespace yolo
         float x, y, width, height, confidence;
     };
 
-    class YoloProcessor : public WinMLProcessor
+    class YoloProcessor : public OnnxProcessor
     {
         std::string _label;
     public:

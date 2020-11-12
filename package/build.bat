@@ -10,6 +10,6 @@ type chocolateyInstall_template.ps1 >> tools\chocolateyInstall.ps1
 
 :: create Chocolatey packages.
 md output
-choco pack --trace --out output winml.nuspec 
+choco pack --trace --out output onnx.nuspec 
 md output-pre
-choco pack --trace --out output-pre winml.nuspec
+choco pack --trace --out output-pre onnx.nuspec
