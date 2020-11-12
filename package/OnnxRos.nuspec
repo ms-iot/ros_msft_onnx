@@ -1,16 +1,16 @@
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
-    <id>WinML</id>
+    <id>ONNX</id>
     <version>1.0.0</version>
-    <title>WinML ROS package</title>
+    <title>ONNX ROS package</title>
     <authors>Lou Amadio</authors>
-    <licenseUrl>https://github.com/ms-iot/winml_tracker/License.txt</licenseUrl>
-    <projectUrl>https://github.com/ms-iot/winml_tracker</projectUrl>
+    <licenseUrl>https://github.com/ms-iot/ros_msft_onnx/License.txt</licenseUrl>
+    <projectUrl>https://github.com/ms-iot/ros_msft_onnx</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>WinML for ROS on Windows.</description>
-    <summary>WinML packaged as a rosdep.</summary>
-    <tags>ros WinML</tags>
+    <description>ONNX for ROS.</description>
+    <summary>ONNX packaged as a rosdep.</summary>
+    <tags>ros onnx</tags>
     <packageSourceUrl>http://www.github.com/MyOrg/MyPackage</packageSourceUrl>
     <docsUrl>http://www.github.com/MyOrg/MyPackage/Docs</docsUrl>
   </metadata>

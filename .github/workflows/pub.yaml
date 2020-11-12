@@ -27,7 +27,7 @@ jobs:
         python-version: 3.7
     - uses: ros-tooling/action-ros-ci@0.0.17
       with:
-        package-name: winml_tracker
+        package-name: ros_msft_onnx
         vcs-repo-file-url: ${{ github.workspace }}/ci/deps.rosinstall
         extra-cmake-args: "-G Ninja -DCMAKE_TOOLCHAIN_FILE=c:/ci/toolchain.cmake -DCMAKE_BUILD_TYPE=Release"
       env:
@@ -37,7 +37,7 @@ jobs:
         CXX: cl.exe
     - uses: ros-tooling/action-ros-ci@0.0.17
       with:
-        package-name: winml_tracker
+        package-name: ros_msft_onnx
         vcs-repo-file-url: ${{ github.workspace }}/ci/empty.rosinstall
         extra-cmake-args: "-G Ninja -DCMAKE_TOOLCHAIN_FILE=c:/ci/toolchain.cmake -DCMAKE_BUILD_TYPE=Release"
       env:
@@ -54,10 +54,10 @@ jobs:
         type $GITHUB_WORKSPACE\package\chocolateyInstall_template.ps1 >> ${{ github.workspace }}\package\tools\chocolateyInstall.ps1
         mkdir c:\opt\output
         cd ${{ github.workspace }}\package
-        choco pack --trace --out c:\opt\output WinML.nuspec 
+        choco pack --trace --out c:\opt\output Onnx.nuspec 
     - uses: actions/upload-artifact@v1
       with:
-        name: WinML.1.0.0.nupkg
+        name: Onnx.1.0.0.nupkg
         path: c:/opt/output
     - name: Create Release
       id: create_release
@@ -76,6 +76,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-        asset_path: c:/opt/output/winml.1.0.0.nupkg
-        asset_name: winml.1.0.0.nupkg
+        asset_path: c:/opt/output/onnx.1.0.0.nupkg
+        asset_name: onnx.1.0.0.nupkg
         asset_content_type: application/zip        

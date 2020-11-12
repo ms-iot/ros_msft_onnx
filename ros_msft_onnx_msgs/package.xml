@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>winml_msgs</name>
+  <name>ros_msft_onnx_msgs</name>
   <version>1.0.0</version>
-  <description>The winml_msgs package</description>
+  <description>The ros_msft_onnx_msgs package</description>
   
   <maintainer email="lamadio@microsoft.com">Lou Amadio</maintainer>
   

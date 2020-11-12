@@ -1,6 +1,6 @@
-# Windows ML ROS Node
+# ONNX (Open Neural Network Exchange) ROS Node
 
-![](https://github.com/ms-iot/winml_tracker/workflows/winml_tracker%20CI/badge.svg)
+![](https://github.com/ms-iot/ros_msft_onnx/workflows/ros_msft_onnx%20CI/badge.svg)
 
 The AI platform in Windows 10 enables developers to use pre-trained machine learning models in their Apps on Windows devices. This offers developers a number of benefits:
 
@@ -10,30 +10,30 @@ The AI platform in Windows 10 enables developers to use pre-trained machine lear
 
 * Flexibility. Developers can choose to perform AI tasks on device or in the cloud based on what their customers & scenarios need. AI processing can happen on the device if it becomes disconnected, or in scenarios where data cannot be sent to the cloud due to cost, size, policy or customer preference. 
 
-## Consuming WinML
+## Consuming Onnx
 Requirements:
 
 * Install Visual Studio 2019 with UWP development
 * ROS melodic for Windows
 
 
-The WinML ROS Node is distrubted as source. To consume it in your robot, clone the winml_tracker sources into your workspace.
+The Onnx ROS Node is distrubted as source. To consume it in your robot, clone the ros_msft_onnx sources into your workspace.
 
 For example:
 
 ```Batchfile
-mkdir c:\workspace\winml_demo\src
-cd c:\workspace\winml_demo\src
+mkdir c:\workspace\onnx_demo\src
+cd c:\workspace\onnx_demo\src
 catkin_init_workspace
-git clone https://github.com/ms-iot/winml_tracker
+git clone https://github.com/ms-iot/ros_msft_onnx
 ```
 
 Create a Launch file, which references the model.onnx file:
 
 ```xml
 <launch>
-  <arg name="onnx_model_path_arg" default="$(find winml_tracker)/testdata/model.onnx"/>
-  <node pkg="winml_tracker" type="winml_tracker_node" name="winml_tracker" output="screen">
+  <arg name="onnx_model_path_arg" default="$(find ros_msft_onnx)/testdata/model.onnx"/>
+  <node pkg="ros_msft_onnx" type="ros_msft_onnx_node" name="ros_msft_onnx" output="screen">
     <param name="onnx_model_path" value="$(arg onnx_model_path_arg)"/>
     <param name="confidence" value="0.5"/>
     <param name="tensor_width" value="416"/>
@@ -51,7 +51,7 @@ Create a Launch file, which references the model.onnx file:
     <param name="image_height" type="double" value="480"/>
   </node>
 
-  <node pkg="tf" type="static_transform_publisher" name="winml_link"
+  <node pkg="tf" type="static_transform_publisher" name="onnx_link"
     args="0 -0.02  0 0 0 0 map base_link 100" />  
 
 </launch>
@@ -80,10 +80,10 @@ Create a Launch file, which references the model.onnx file:
 | calibration | Path to the OpenCV calibration file for point in persective |
 
 ## Subscriptions
-WinML subscribes to the topic listed in the `image_topic` property, or `/cv_camera/image_raw`
+Onnx subscribes to the topic listed in the `image_topic` property, or `/cv_camera/image_raw`
 
 ## Publishing
-The WinML Publishes the following topics:
+Onnx Publishes the following topics:
 
 ### /tracked_objects/image
 Outputs an image with highlighing if the debug property is set

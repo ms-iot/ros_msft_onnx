@@ -5,7 +5,7 @@
 #include <cv_bridge/cv_bridge.h>
 #include <tf/tf.h>
 
-#include "winml_tracker.h"
+#include "ros_msft_onnx.h"
 
 namespace pose
 {
@@ -23,7 +23,7 @@ namespace pose
         float confidence;
     };
 
-    class PoseProcessor : public WinMLProcessor
+    class PoseProcessor : public OnnxProcessor
     {
         static std::vector<float> _gridX;
         static std::vector<float> _gridY;

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(winml_tracker)
+project(ros_msft_onnx)
 
 ## Compile as at least C++17 for cppwinrt
 if(NOT CMAKE_CXX_STANDARD)
@@ -20,7 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
   visualization_msgs
-  winml_msgs
+  ros_msft_onnx_msgs
   image_transport
   roscpp
   cv_bridge
@@ -29,7 +29,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_package(
   INCLUDE_DIRS include
-  CATKIN_DEPENDS std_msgs geometry_msgs visualization_msgs winml_msgs image_transport roscpp cv_bridge tf
+  CATKIN_DEPENDS std_msgs geometry_msgs visualization_msgs ros_msft_onnx_msgs image_transport roscpp cv_bridge tf
 )
 
 include_directories(
@@ -38,7 +38,7 @@ include_directories(
   ${EIGEN3_INCLUDE_DIRS}
 )
 
-add_executable(${PROJECT_NAME}_node src/winml_tracker.cpp src/main.cpp src/yolo_box.cpp src/pose_parser.cpp)
+add_executable(${PROJECT_NAME}_node src/ros_msft_onnx.cpp src/main.cpp src/yolo_box.cpp src/pose_parser.cpp)
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} windowsapp)
 
@@ -64,13 +64,13 @@ if(CATKIN_ENABLE_TESTING)
     std_msgs
     geometry_msgs
     visualization_msgs
-    winml_msgs
+    ros_msft_onnx_msgs
     image_transport
     roscpp
     cv_bridge
     tf
     rostest
   )
-  add_rostest_gtest(${PROJECT_NAME}_testnode test/testtracker.launch test/testtracker.cpp src/winml_tracker.cpp src/yolo_box.cpp  src/pose_parser.cpp)
+  add_rostest_gtest(${PROJECT_NAME}_testnode test/testtracker.launch test/testtracker.cpp src/ros_msft_onnx.cpp src/yolo_box.cpp  src/pose_parser.cpp)
   target_link_libraries(${PROJECT_NAME}_testnode ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} windowsapp)
 endif()

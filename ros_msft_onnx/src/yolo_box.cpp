@@ -9,8 +9,8 @@
 #include <winrt/Windows.Graphics.h>
 #include <winrt/Windows.Graphics.Imaging.h>
 
-#include "winml_tracker/winml_tracker.h"
-#include "winml_tracker/yolo_box.h"
+#include "ros_msft_onnx/ros_msft_onnx.h"
+#include "ros_msft_onnx/yolo_box.h"
 
 #include <algorithm>
 #include <numeric>
@@ -44,7 +44,7 @@ namespace yolo
 
     bool YoloProcessor::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
     {
-        WinMLProcessor::init(nh, nhPrivate);
+        OnnxProcessor::init(nh, nhPrivate);
         _channelCount = CHANNEL_COUNT;
         _rowCount = ROW_COUNT;
         _colCount = COL_COUNT;
@@ -75,7 +75,7 @@ namespace yolo
                 visualization_msgs::Marker marker;
                 marker.header.frame_id = _linkName;
                 marker.header.stamp = ros::Time();
-                marker.ns = "winml";
+                marker.ns = "onnx";
                 marker.id = count++;
                 marker.type = visualization_msgs::Marker::SPHERE;
                 marker.action = visualization_msgs::Marker::ADD;
@@ -100,7 +100,7 @@ namespace yolo
 
                 if (_debug)
                 {
-                    ROS_INFO("WinML: %s detected!", _label.c_str());
+                    ROS_INFO("ONNX: %s detected!", _label.c_str());
                     // Draw a bounding box on the CV image
                     cv::Scalar color(255, 255, 0);
                     cv::Rect box;
@@ -214,7 +214,7 @@ namespace yolo
     int YoloProcessor::GetOffset(int x, int y, int channel)
     {
         // YOLO outputs a tensor that has a shape of 125x13x13, which 
-        // WinML flattens into a 1D array.  To access a specific channel 
+        // ONNX flattens into a 1D array.  To access a specific channel 
         // for a given (x,y) cell position, we need to calculate an offset
         // into the array
         static int channelStride = ROW_COUNT * COL_COUNT;

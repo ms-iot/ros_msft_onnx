@@ -9,7 +9,7 @@
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.AI.MachineLearning.h>
 
-#include "winml_tracker/winml_tracker.h"
+#include "ros_msft_onnx/ros_msft_onnx.h"
 
 using namespace std;
 using namespace winrt;
@@ -17,7 +17,7 @@ using namespace winrt;
 int main(int argc, char **argv)
 {
     /*
-    ROS_WARN("WINML: Waiting for Debugger");
+    ROS_WARN("ONNX: Waiting for Debugger");
     while (!IsDebuggerPresent())
     {
         Sleep(5);
@@ -25,12 +25,12 @@ int main(int argc, char **argv)
     */
 
     winrt::init_apartment();
-    ros::init(argc, argv, "winml_tracker");
+    ros::init(argc, argv, "ros_msft_onnx");
 
     ros::NodeHandle nh;
     ros::NodeHandle nhPrivate("~");
 
-    WinMLTracker tracker;
+    OnnxTracker tracker;
 
     if (tracker.init(nh, nhPrivate))
     {

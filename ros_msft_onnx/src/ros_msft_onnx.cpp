@@ -18,9 +18,9 @@
 #include <winrt/Windows.Graphics.h>
 #include <winrt/Windows.Graphics.Imaging.h>
 
-#include "winml_tracker/winml_tracker.h"
-#include "winml_tracker/yolo_box.h"
-#include "winml_tracker/pose_parser.h"
+#include "ros_msft_onnx/ros_msft_onnx.h"
+#include "ros_msft_onnx/yolo_box.h"
+#include "ros_msft_onnx/pose_parser.h"
 
 #include <string>
 #include <codecvt>
@@ -49,7 +49,7 @@ std::string strFromHstring(hstring hstr)
     return converted;
 }
 
-WinMLProcessor::WinMLProcessor()
+OnnxProcessor::OnnxProcessor()
 : _process(ImageProcessing::Scale)
 , _confidence(0.70f)
 , _debug(false)
@@ -58,7 +58,7 @@ WinMLProcessor::WinMLProcessor()
 
 }
 
-bool WinMLProcessor::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
+bool OnnxProcessor::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
 {
     std::string imageProcessingType;
     if (nhPrivate.getParam("image_processing", imageProcessingType))
@@ -77,7 +77,7 @@ bool WinMLProcessor::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
         }
         else
         {
-            ROS_WARN("WINML: unknown image processing type: %s", imageProcessingType);
+            ROS_WARN("ONNX: unknown image processing type: %s", imageProcessingType);
             // default;
         }
     }
@@ -102,14 +102,14 @@ bool WinMLProcessor::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
         _tensorHeight = kDefaultTensorHeight;
     }
 
-    nhPrivate.param<bool>("winml_fake", _fake, false);
+    nhPrivate.param<bool>("onnx_fake", _fake, false);
     
     nhPrivate.getParam("link_name", _linkName);
 
     if (!nhPrivate.getParam("onnx_model_path", _onnxModel) ||
         _onnxModel.empty())
     {
-        ROS_ERROR("WINML: onnx_model_path parameter has not been set.");
+        ROS_ERROR("ONNX: onnx_model_path parameter has not been set.");
         return false;
     }
 
@@ -151,7 +151,7 @@ bool WinMLProcessor::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
     _detect_pub = nh.advertise<visualization_msgs::MarkerArray>("tracked_objects", 1);
 
     image_transport::ImageTransport it(nh);
-    _cameraSub = it.subscribe(imageTopic.c_str(), 1, &WinMLProcessor::ProcessImage, this);
+    _cameraSub = it.subscribe(imageTopic.c_str(), 1, &OnnxProcessor::ProcessImage, this);
     _image_pub = it.advertise("tracked_objects/image", 1);
     try
     {
@@ -159,24 +159,24 @@ bool WinMLProcessor::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
         hstring modelPath = hstring(wstring_to_utf8().from_bytes(_onnxModel));
         _model = LearningModel::LoadFromFilePath(modelPath);
 
-        // Create a WinML session
+        // Create an ONNX session
         _session = LearningModelSession(_model, LearningModelDevice(LearningModelDeviceKind::Cpu));
     }
     catch (hresult_error const& e)
     {
-        ROS_ERROR("WINML: Failed to Start ML Session!: %s", strFromHstring(e.message()).c_str());
+        ROS_ERROR("ONNX: Failed to Start ML Session!: %s", strFromHstring(e.message()).c_str());
         return false;
     }
     catch (std::exception& e)
     {
-        ROS_ERROR("WINML: Failed to Start ML Session: %s", e.what());
+        ROS_ERROR("ONNX: Failed to Start ML Session: %s", e.what());
         return false;
     }
 
     return true;
 }
 
-void WinMLProcessor::ProcessImage(const sensor_msgs::ImageConstPtr& image) 
+void OnnxProcessor::ProcessImage(const sensor_msgs::ImageConstPtr& image) 
 {
     if (_session == nullptr)
     {
@@ -192,7 +192,7 @@ void WinMLProcessor::ProcessImage(const sensor_msgs::ImageConstPtr& image)
     }
     catch (cv_bridge::Exception& e)
     {
-        ROS_ERROR("WINML: cv_bridge exception: %s", e.what());
+        ROS_ERROR("ONNX: cv_bridge exception: %s", e.what());
         return;
     }
 
@@ -203,7 +203,7 @@ void WinMLProcessor::ProcessImage(const sensor_msgs::ImageConstPtr& image)
     float aspectRatio = (float)s.width / (float)s.height;
     if (s.width <= 0 || s.height <= 0)
     {
-        ROS_ERROR("WINML: irrational image size received; one dimention zero or less");
+        ROS_ERROR("ONNX: irrational image size received; one dimention zero or less");
         return;
     }
 
@@ -270,7 +270,7 @@ void WinMLProcessor::ProcessImage(const sensor_msgs::ImageConstPtr& image)
     }
     catch (hresult_error const& e)
     {
-        ROS_ERROR("WINML: Failed to bind!: %s", strFromHstring(e.message()).c_str());
+        ROS_ERROR("ONNX: Failed to bind!: %s", strFromHstring(e.message()).c_str());
         return;
     }
 
@@ -287,12 +287,12 @@ void WinMLProcessor::ProcessImage(const sensor_msgs::ImageConstPtr& image)
     }
     catch (hresult_error const& e)
     {
-        ROS_ERROR("WINML: Failed to bind!: %s", strFromHstring(e.message()).c_str());
+        ROS_ERROR("ONNX: Failed to bind!: %s", strFromHstring(e.message()).c_str());
         return;
     }
     catch (std::exception& e)
     {
-        ROS_ERROR("WINML: Failed to bind!: %s", e.what());
+        ROS_ERROR("ONNX: Failed to bind!: %s", e.what());
         return;
     }
 
@@ -303,13 +303,13 @@ void WinMLProcessor::ProcessImage(const sensor_msgs::ImageConstPtr& image)
     }
     else
     {
-        // Call WinML
+        // Call ONNX
         try
         {
             auto results = _session.Evaluate(binding, L"RunId");
             if (!results.Succeeded())
             {
-                ROS_ERROR("WINML: Evaluation of object tracker failed!");
+                ROS_ERROR("ONNX: Evaluation of object tracker failed!");
                 return;
             }
 
@@ -323,12 +323,12 @@ void WinMLProcessor::ProcessImage(const sensor_msgs::ImageConstPtr& image)
         }
         catch (hresult_error const& e)
         {
-            ROS_ERROR("WINML: Evaluation of object tracker failed!: %s", strFromHstring(e.message()));
+            ROS_ERROR("ONNX: Evaluation of object tracker failed!: %s", strFromHstring(e.message()));
             return;
         }
         catch (std::exception& e)
         {
-            ROS_ERROR("WINML: Evaluation of object tracker failed!: %s", e.what());
+            ROS_ERROR("ONNX: Evaluation of object tracker failed!: %s", e.what());
             return;
         }
     }
@@ -336,7 +336,7 @@ void WinMLProcessor::ProcessImage(const sensor_msgs::ImageConstPtr& image)
     return;
 }
 
-bool WinMLTracker::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
+bool OnnxTracker::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
 {
     _nh = nh;
     _nhPrivate = nhPrivate;
@@ -357,14 +357,14 @@ bool WinMLTracker::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
 
     if (_processor == nullptr)
     {
-        ROS_INFO("WINML: Processor not specified, selecting yolo as the default");
+        ROS_INFO("ONNX: Processor not specified, selecting yolo as the default");
         _processor = std::make_shared<yolo::YoloProcessor>();
     }
 
     return _processor->init(_nh, nhPrivate);
 }
 
-bool WinMLTracker::shutdown()
+bool OnnxTracker::shutdown()
 {
     _nh.shutdown();
     _nhPrivate.shutdown();
