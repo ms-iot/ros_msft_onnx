@@ -1,47 +1,87 @@
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
+#include <onnx_object_detection/onnx_tracker.h>
+#include <std_msgs/msg/string.hpp>
+#include <sensor_msgs/msg/image.hpp>
 
-#include <onnx_object_detection/yolo_processor.h>
-
-#include <string>
-#include <codecvt>
-#include <locale>
-#include <numeric>
-
-using convert_t = std::codecvt_utf8<wchar_t>;
-std::wstring_convert<convert_t, wchar_t> strconverter;
+const uint32_t kDefaultTensorWidth = 416;
+const uint32_t kDefaultTensorHeight = 416;
 
 static std::wstring to_wstring(std::string str)
 {
     return strconverter.from_bytes(str);
 }
 
-const int ROW_COUNT = 13;
-const int COL_COUNT = 13;
-const int CHANNEL_COUNT = 125;
-const int BOXES_PER_CELL = 5;
-const int BOX_INFO_FEATURE_COUNT = 5;
-const int CLASS_COUNT = 20;
-const float CELL_WIDTH = 32;
-const float CELL_HEIGHT = 32;
+/////////////////////// ONNX PROCESSOR /////////////////////////
 
-static const std::string labels[CLASS_COUNT] =
-{
-    "aeroplane", "bicycle", "bird", "boat", "bottle",
-    "bus", "car", "cat", "chair", "cow",
-    "diningtable", "dog", "horse", "motorbike", "person",
-    "pottedplant", "sheep", "sofa", "train", "tvmonitor"
-};
-
-YoloProcessor::YoloProcessor()
-: _tensorHeight(416),
-_tensorWidth(416)
+OnnxProcessor::OnnxProcessor(): 
+_confidence (0.70f)
+,_debug(false)
+,_normalize(false)
 {
 
 }
 
-void YoloProcessor::init(const YoloInitOptions &initOptions)
+virtual void init(rclcpp::Node::SharedPtr& node)
 {
+    _node = node;
+    _node->get_parameter("confidence", _confidence);
+    _node->get_parameter("debug", _debug);
+    _node->get_parameter("link_name", _linkName);
+    _fake = false;
+
+    int temp = 0;
+    if (_node->get_parameter("tensor_width", temp) && temp > 0)
+    {
+        _tensorWidth = (uint)temp;
+    }
+    else 
+    {
+        _tensorWidth = kDefaultTensorWidth;
+    }
+
+    temp = 0;
+    if ( _node->get_parameter("tensor_height", temp) && temp > 0)
+    {
+        _tensorHeight = (uint)temp;
+    }
+    else 
+    {
+        _tensorHeight = kDefaultTensorHeight;
+    }
+
+    if (!_node->get_parameter("onnx_model_path", _onnxModel) ||
+        _onnxModel.empty())
+    {
+        RCLCPP_ERROR("Onnx: onnx_model_path parameter has not been set.");
+    }
+
+    if (_node->get_parameter("calibration", _calibration))
+    {
+        try
+        {
+            cv::FileStorage fs(_calibration, cv::FileStorage::READ | cv::FileStorage::FORMAT_YAML);
+            fs["camera_matrix"] >> _camera_matrix;
+            fs["distortion_coefficients"] >> _dist_coeffs;
+        }
+        catch (std::exception &e)
+        {
+            RCLCPP_ERROR(_node->get_logger(),"Failed to read the calibration file, continuing without calibration.\n%s", e.what());
+            // no calibration for you.
+            _calibration = "";
+        }
+    }
+
+    std::string image_topic_ = "image_raw";
+    std::string visual_marker_topic_ = "visual_markers";
+    std::string image_pub_topic_ = "image_debug_raw";
+    std::string detect_pose_topic_ = "detected_object";
+
+    publisher_ = _node->create_publisher<visualization_msgs::msg::Marker>(visual_marker_topic_, 10);
+    image_pub_ = _node->create_publisher<sensor_msgs::msg::Image>(image_pub_topic_, 10);
+    subscription_ = _node->create_subscription<sensor_msgs::msg::Image>(
+            image_topic_, 10, std::bind(&OnnxProcessor::ProcessImage, _node, _1));
+    detect_pose_pub_ = _node->create_publisher<onnx_msgs::DetectedObjectPose>(detect_pose_topic_, 1); 
+    
+    // Generate onnx session
     //*************************************************************************
     // initialize  enviroment...one enviroment per process
     // enviroment maintains thread pools and other state info
@@ -53,21 +93,27 @@ void YoloProcessor::init(const YoloInitOptions &initOptions)
     session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
 
 #ifdef _WIN32
-    auto modelFullPath = ::to_wstring(initOptions.modelFullPath).c_str();
+    auto modelFullPath = ::to_wstring(_onnxModel).c_str();
 #else
-    auto modelFullPath = initOptions.modelFullPath.c_str();
+    auto modelFullPath = _onnxModel.c_str();
 #endif
 
     _session = std::make_shared<Ort::Session>(*_env, modelFullPath, session_options);
     _allocator = std::make_shared<Ort::AllocatorWithDefaultOptions>();
-
     DumpParameters();
+
 }
 
-std::vector<YoloBox> YoloProcessor::ProcessImage(
-    const cv::Mat &image,
-    float confidence_threshold) 
+void OnnxProcessor::ProcessImage(const sensor_msgs::msg::Image::SharedPtr msg) 
 {
+    // Convert back to an OpenCV Image
+    cv_bridge::CvImagePtr cv_ptr;
+    cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+
+    cv::Size s = cv_ptr->image.size();
+    cv::Rect ROI((s.width - 416) / 2, (s.height - 416) / 2, 416, 416);
+    cv::Mat image = cv_ptr->image(ROI);
+
     // Convert to RGB
     cv::Mat rgb_image;
     cv::cvtColor(image, rgb_image, cv::COLOR_BGR2RGB);
@@ -76,9 +122,18 @@ std::vector<YoloBox> YoloProcessor::ProcessImage(
     cv::Mat image_32_bit;
     rgb_image.convertTo(image_32_bit, CV_32F);
 
+    if (_normalize)
+    {
+        cv::normalize(image_32_bit, image_32_bit, 0.0f, 1.0f, cv::NORM_MINMAX);
+    }
+
     // Extract color channels from interleaved data
     cv::Mat channels[3];
     cv::split(image_32_bit, channels);
+
+    // TODO: [insert new onnx code] In the WinML version this is where the binding was created 
+    // It depended on yolo/pose processor vars like _channelCount, _colCount, _rowCount
+    // TODO: Add in "if(_fake)" flow
 
     size_t input_tensor_size = _tensorHeight * _tensorWidth * 3;
 
@@ -108,102 +163,26 @@ std::vector<YoloBox> YoloProcessor::ProcessImage(
     output.resize(output_total_len);
     memcpy(&output[0], floatarr, output_total_len * sizeof(float));
 
-    return GetRecognizedObjects(output, confidence_threshold);
-}
-
-std::vector<YoloBox> YoloProcessor::GetRecognizedObjects(std::vector<float> modelOutputs, float threshold)
-{
-    static float anchors[] =
+    // TODO: [insert new onnx code] In the WinML version this is where the results were retrieved and passed on to the process output function
+    // [replace with new onnx code below]
+    auto results = _session.Evaluate(binding, L"RunId"); 
+    if (!results.Succeeded())
     {
-        1.08f, 1.19f, 3.42f, 4.41f, 6.63f, 11.38f, 9.42f, 5.11f, 16.62f, 10.52f
-    };
-    static int featuresPerBox = BOX_INFO_FEATURE_COUNT + CLASS_COUNT;
-    static int stride = featuresPerBox * BOXES_PER_CELL;
-
-    std::vector<YoloBox> boxes;
-
-    for (int cy = 0; cy < ROW_COUNT; cy++)
-    {
-        for (int cx = 0; cx < COL_COUNT; cx++)
-        {
-            for (int b = 0; b < BOXES_PER_CELL; b++)
-            {
-                int channel = (b * (CLASS_COUNT + BOX_INFO_FEATURE_COUNT));
-                float tx = modelOutputs[GetOffset(cx, cy, channel)];
-                float ty = modelOutputs[GetOffset(cx, cy, channel + 1)];
-                float tw = modelOutputs[GetOffset(cx, cy, channel + 2)];
-                float th = modelOutputs[GetOffset(cx, cy, channel + 3)];
-                float tc = modelOutputs[GetOffset(cx, cy, channel + 4)];
-
-                float x = ((float)cx + Sigmoid(tx)) * CELL_WIDTH;
-                float y = ((float)cy + Sigmoid(ty)) * CELL_HEIGHT;
-                float width = (float)exp(tw) * CELL_WIDTH * anchors[b * 2];
-                float height = (float)exp(th) * CELL_HEIGHT * anchors[b * 2 + 1];
-
-                float confidence = Sigmoid(tc);
-                if (confidence < threshold)
-                    continue;
-
-                std::vector<float> classes(CLASS_COUNT);
-                float classOffset = channel + BOX_INFO_FEATURE_COUNT;
-
-                for (int i = 0; i < CLASS_COUNT; i++)
-                    classes[i] = modelOutputs[GetOffset(cx, cy, i + classOffset)];
-
-                Softmax(classes);
-
-                // Get the index of the top score and its value
-                auto iter = std::max_element(classes.begin(), classes.end());
-                float topScore = (*iter) * confidence;
-                int topClass = std::distance(classes.begin(), iter);
-
-                if (topScore < threshold)
-                    continue;
-
-                YoloBox top_box = {
-                    labels[topClass],
-                    (x - width / 2),
-                    (y - height / 2),
-                    width,
-                    height,
-                    topScore
-                };
-                boxes.push_back(top_box);
-            }
-        }
+        RCLCPP_ERROR(_node->get_logger(), "ONNX: Evaluation of object tracker failed!");
+        return;
     }
 
-    return boxes;
+    // Convert the results to a vector and parse the bounding boxes
+    auto grid_result = results.Outputs().Lookup(_outName).as<TensorFloat>().GetAsVectorView();
+    std::vector<float> grids(grid_result.Size());
+    winrt::array_view<float> grid_view(grids);
+    grid_result.GetMany(0, grid_view);
+
+    ProcessOutput(grids, image_resized);
+    // [replace with new onnx code above]
 }
 
-int YoloProcessor::GetOffset(int x, int y, int channel)
-{
-    // YOLO outputs a tensor that has a shape of 125x13x13, which 
-    // WinML flattens into a 1D array.  To access a specific channel 
-    // for a given (x,y) cell position, we need to calculate an offset
-    // into the array
-    static int channelStride = ROW_COUNT * COL_COUNT;
-    return (channel * channelStride) + (y * COL_COUNT) + x;
-}
-
-float YoloProcessor::Sigmoid(float value)
-{
-    float k = (float)std::exp(value);
-    return k / (1.0f + k);
-}
-
-void YoloProcessor::Softmax(std::vector<float> &values)
-{
-    float max_val{ *std::max_element(values.begin(), values.end()) };
-    std::transform(values.begin(), values.end(), values.begin(),
-        [&](float x) { return std::exp(x - max_val); });
-
-    float exptot = std::accumulate(values.begin(), values.end(), 0.0);
-    std::transform(values.begin(), values.end(), values.begin(),
-        [&](float x) { return (float)(x / exptot); });
-}
-
-void YoloProcessor::DumpParameters()
+void OnnxProcessor::DumpParameters()
 {
     //*************************************************************************
     // print model input layer (node names, types, shape etc.)
@@ -268,4 +247,32 @@ void YoloProcessor::DumpParameters()
         for (int j = 0; j < output_node_dims.size(); j++)
             printf("Output %d : dim %d=%jd\n", i, j, output_node_dims[j]);
     }
+}
+
+
+/////////////////////////////////////////////// ONNX TRACKER //////////////////////////////////////////////////
+void OnnxTracker::init(rclcpp::Node::SharedPtr& node)
+{
+    // Parameters.
+    std::string trackerType;
+    if (node->get_parameter("tracker_type", trackerType))
+    {
+        if (trackerType == "yolo")
+        {
+            _processor = std::make_shared<yolo::YoloProcessor>();
+        }
+        else if (trackerType == "pose")
+        {
+            _processor = std::make_shared<pose::PoseProcessor>();
+        }
+    }
+
+    // Tracker time was no specified 
+    if (_processor == nullptr)
+    {
+        RCLCPP_INFO(node->get_logger(), "Onnx Tracker: Processor not specified, selecting yolo as the default");
+        _processor = std::make_shared<yolo::YoloProcessor>();
+    }
+
+    _processor->init(node);
 }

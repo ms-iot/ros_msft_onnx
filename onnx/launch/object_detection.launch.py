@@ -11,15 +11,15 @@ from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
-    share_dir = get_package_share_directory('onnx_object_detection')
+    share_dir = get_package_share_directory('onnx')
     rviz_default_view = os.path.join(share_dir, 'rviz', 'default_view.rviz')
 
     return launch.LaunchDescription([
         launch_ros.actions.Node(
-            package='onnx_object_detection', executable='object_detection', output='screen',
-            name=['object_detection'],
+            package='onnx', executable='onnx', output='screen',
+            name=['onnx'],
             parameters=[
-                {'frame_id': 'camera'},
+                {'_linkName': 'camera'},
             ]),
         launch_ros.actions.Node(
             package='cv_camera', executable='cv_camera_node', output='screen',
