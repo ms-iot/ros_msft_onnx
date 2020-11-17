@@ -2,12 +2,6 @@
 #include <cv_bridge/cv_bridge.h>
 #include <image_transport/image_transport.h>
 #include <visualization_msgs/MarkerArray.h>
-#include <winrt/Windows.Foundation.h>
-#include <winrt/Windows.AI.MachineLearning.h>
-#include <winrt/Windows.Media.h>
-#include <winrt/Windows.Storage.h>
-#include <winrt/Windows.Graphics.h>
-#include <winrt/Windows.Graphics.Imaging.h>
 
 #include "ros_msft_onnx/ros_msft_onnx.h"
 #include "ros_msft_onnx/yolo_box.h"

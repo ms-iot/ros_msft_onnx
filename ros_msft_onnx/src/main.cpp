@@ -4,15 +4,9 @@
 #include <image_transport/image_transport.h>
 #include <visualization_msgs/MarkerArray.h>
 
-#include <vcruntime.h>
-#include <windows.h>
-#include <winrt/Windows.Foundation.h>
-#include <winrt/Windows.AI.MachineLearning.h>
-
 #include "ros_msft_onnx/ros_msft_onnx.h"
 
 using namespace std;
-using namespace winrt;
 
 int main(int argc, char **argv)
 {

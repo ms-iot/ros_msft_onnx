@@ -5,19 +5,6 @@
 #include <tf/LinearMath/Quaternion.h>
 #include <opencv2/opencv.hpp>
 
-
-// Include ROS files before Windows, as there are overlapping symbols
-#include <vcruntime.h>
-#include <windows.h>
-
-#include <winrt/Windows.Foundation.h>
-#include <winrt/Windows.Foundation.Collections.h>
-#include <winrt/Windows.AI.MachineLearning.h>
-#include <winrt/Windows.Media.h>
-#include <winrt/Windows.Storage.h>
-#include <winrt/Windows.Graphics.h>
-#include <winrt/Windows.Graphics.Imaging.h>
-
 #include "ros_msft_onnx/ros_msft_onnx.h"
 #include "ros_msft_onnx/yolo_box.h"
 #include "ros_msft_onnx/pose_parser.h"
@@ -27,13 +14,6 @@
 #include <fstream>
 #include <sstream>
 
-using namespace winrt;
-using namespace Windows::Foundation;
-using namespace Windows::Foundation::Collections;
-using namespace Windows::AI::MachineLearning;
-using namespace Windows::Media;
-using namespace Windows::Graphics::Imaging;
-using namespace Windows::Storage;
 using namespace std;
 
 using convert_type = std::codecvt_utf8<wchar_t>;

@@ -6,12 +6,6 @@
 #include <tf/LinearMath/Quaternion.h>
 #include <tf/transform_datatypes.h>
 
-#include <winrt/Windows.Foundation.h>
-#include <winrt/Windows.AI.MachineLearning.h>
-#include <winrt/Windows.Media.h>
-#include <winrt/Windows.Storage.h>
-#include <winrt/Windows.Graphics.h>
-#include <winrt/Windows.Graphics.Imaging.h>
 #include "ros_msft_onnx/ros_msft_onnx.h"
 #include "ros_msft_onnx/pose_parser.h"
 #include "ros_msft_onnx_msgs/DetectedObjectPose.h"
@@ -35,14 +29,6 @@ const int COL_COUNT = 13;
 const int CHANNEL_COUNT = 20;
 const int CLASS_COUNT = 20;
 
-using namespace winrt;
-using namespace Windows::Foundation;
-using namespace Windows::Foundation::Collections;
-using namespace Windows::AI::MachineLearning;
-using namespace Windows::Media;
-using namespace Windows::Graphics::Imaging;
-using namespace Windows::Storage;
-using namespace std;
 using namespace std;
 using namespace pose;
 

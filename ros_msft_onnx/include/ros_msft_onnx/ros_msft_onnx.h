@@ -1,5 +1,7 @@
 #pragma once
 
+#include <onnxruntime_vendor/onnxruntime_cxx_api.h>
+
 class OnnxProcessor
 {
 public:
@@ -27,6 +29,14 @@ private:
 protected:
     virtual void ProcessOutput(std::vector<float> output, cv::Mat& image) = 0;
 
+    uint32_t _tensorWidth;
+    uint32_t _tensorHeight;
+    std::shared_ptr<Ort::Env> _env;
+    std::shared_ptr<Ort::Session> _session;
+    std::shared_ptr<Ort::AllocatorWithDefaultOptions> _allocator;
+    std::vector<const char*> _input_node_names;
+    std::vector<const char*> _output_node_names;
+/* TODO (lilustga): remove this
     bool _fake;
     winrt::hstring _inName;
     winrt::hstring _outName;
@@ -56,7 +66,7 @@ protected:
     image_transport::Publisher _image_pub;
     image_transport::Publisher _debug_image_pub;
     image_transport::Subscriber _cameraSub;
-
+*/
 
 };
 
