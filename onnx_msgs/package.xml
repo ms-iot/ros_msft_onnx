@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<package format="2">
+<package format="3">
   <name>onnx_msgs</name>
   <version>1.0.0</version>
   <description>The onnx_msgs package</description>
@@ -12,6 +12,7 @@
 
   <depend>std_msgs</depend>
   <depend>geometry_msgs</depend>
+  <depend>builtin_interfaces</depend>
 
   <build_depend>rosidl_default_generators</build_depend>
   <exec_depend>rosidl_default_runtime</exec_depend>
