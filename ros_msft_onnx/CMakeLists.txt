@@ -12,6 +12,8 @@ find_package(Eigen3 REQUIRED)
 
 find_package(OpenCV REQUIRED)
 
+find_package(onnxruntime_vendor REQUIRED)
+
 find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
@@ -21,8 +23,13 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   cv_bridge
   tf
-  onnxruntime_vendor
 )
+
+get_cmake_property(_variableNames VARIABLES)
+foreach (_variableName ${_variableNames})
+  #message(STATUS "${_variableName}=${${_variableName}}")
+endforeach()
+
 
 catkin_package(
   INCLUDE_DIRS include
@@ -37,15 +44,17 @@ include_directories(
 )
 
 add_executable(${PROJECT_NAME}_node src/ros_msft_onnx.cpp src/main.cpp src/yolo_box.cpp src/pose_parser.cpp)
-add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} windowsapp)
+add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${onnxruntime_vendor_TARGETS})
+target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${onnxruntime_vendor_TARGETS})
 
 # The node expects to use the Tiny YOLO model available in the ONNX model zoo.
+if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/testdata/model.onnx")
 file(DOWNLOAD
   https://github.com/onnx/models/raw/master/vision/object_detection_segmentation/tiny-yolov2/model/tinyyolov2-8.onnx
   ${CMAKE_CURRENT_BINARY_DIR}/testdata/model.onnx
   SHOW_PROGRESS
 )
+endif()
 
 install(FILES
   $<TARGET_FILE:onnxruntime-unofficial::onnxruntime>

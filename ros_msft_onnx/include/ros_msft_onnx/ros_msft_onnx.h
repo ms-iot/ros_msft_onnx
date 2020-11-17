@@ -1,6 +1,6 @@
 #pragma once
 
-#include <onnxruntime_vendor/onnxruntime_cxx_api.h>
+#include <onnxruntime_cxx_api.h>
 
 class OnnxProcessor
 {
