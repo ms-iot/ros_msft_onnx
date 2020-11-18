@@ -23,6 +23,12 @@ find_package(visualization_msgs REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(onnxruntime_vendor REQUIRED)
 find_package(onnx_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(geometry_msgs REQUIRED)
+
+# TODO: Are any of these packages necessary? 
+# find_package(Eigen3 REQUIRED)
+# find_package(OpenCV REQUIRED)
 
 # The node expects to use the Tiny YOLO model available in the ONNX model zoo.
 file(DOWNLOAD
@@ -49,7 +55,9 @@ ament_target_dependencies(${PROJECT_NAME}
   visualization_msgs
   cv_bridge
   onnxruntime_vendor
-  onnx_msgs)
+  onnx_msgs
+  tf2
+  geometry_msgs)
 
 install(FILES
   $<TARGET_FILE:onnxruntime-unofficial::onnxruntime>
