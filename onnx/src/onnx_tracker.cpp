@@ -1,10 +1,22 @@
-#include <onnx_object_detection/onnx_tracker.h>
 #include <std_msgs/msg/string.hpp>
 #include <sensor_msgs/msg/image.hpp>
+
+#include <onnx/onnx_tracker.h>
+#include <onnx/yolo_processor.h>
+#include <onnx/pose_processor.h>
+
+#include <string>
+#include <codecvt>
+#include <locale>
+#include <numeric>
+
+using std::placeholders::_1;
 
 const uint32_t kDefaultTensorWidth = 416;
 const uint32_t kDefaultTensorHeight = 416;
 
+using convert_t = std::codecvt_utf8<wchar_t>;
+std::wstring_convert<convert_t, wchar_t> strconverter;
 static std::wstring to_wstring(std::string str)
 {
     return strconverter.from_bytes(str);
@@ -16,11 +28,12 @@ OnnxProcessor::OnnxProcessor():
 _confidence (0.70f)
 ,_debug(false)
 ,_normalize(false)
+,_process(ImageProcessing::Scale)
 {
 
 }
 
-virtual void init(rclcpp::Node::SharedPtr& node)
+bool OnnxProcessor::init(rclcpp::Node::SharedPtr& node)
 {
     _node = node;
     _node->get_parameter("confidence", _confidence);
@@ -51,7 +64,8 @@ virtual void init(rclcpp::Node::SharedPtr& node)
     if (!_node->get_parameter("onnx_model_path", _onnxModel) ||
         _onnxModel.empty())
     {
-        RCLCPP_ERROR("Onnx: onnx_model_path parameter has not been set.");
+        RCLCPP_ERROR(_node->get_logger(), "Onnx: onnx_model_path parameter has not been set.");
+        return false;
     }
 
     if (_node->get_parameter("calibration", _calibration))
@@ -70,6 +84,28 @@ virtual void init(rclcpp::Node::SharedPtr& node)
         }
     }
 
+    std::string imageProcessingType;
+    if (_node->get_parameter("image_processing", imageProcessingType))
+    {
+        if (imageProcessingType == "crop")
+        {
+            _process = Crop;
+        }
+        else if (imageProcessingType == "scale")
+        {
+            _process = Scale;
+        }
+        else if (imageProcessingType == "resize")
+        {
+            _process = Resize;
+        }
+        else
+        {
+             RCLCPP_ERROR(_node->get_logger(),"Onnx: unknown image processing type: %s", imageProcessingType);
+            // default;
+        }
+    }
+
     std::string image_topic_ = "image_raw";
     std::string visual_marker_topic_ = "visual_markers";
     std::string image_pub_topic_ = "image_debug_raw";
@@ -78,8 +114,8 @@ virtual void init(rclcpp::Node::SharedPtr& node)
     publisher_ = _node->create_publisher<visualization_msgs::msg::Marker>(visual_marker_topic_, 10);
     image_pub_ = _node->create_publisher<sensor_msgs::msg::Image>(image_pub_topic_, 10);
     subscription_ = _node->create_subscription<sensor_msgs::msg::Image>(
-            image_topic_, 10, std::bind(&OnnxProcessor::ProcessImage, _node, _1));
-    detect_pose_pub_ = _node->create_publisher<onnx_msgs::DetectedObjectPose>(detect_pose_topic_, 1); 
+        image_topic_, 10, std::bind(&OnnxProcessor::ProcessImage, _node, _1));
+    detect_pose_pub_ = _node->create_publisher<onnx_msgs::msg::DetectedObjectPose>(detect_pose_topic_, 1); 
     
     // Generate onnx session
     //*************************************************************************
@@ -102,21 +138,70 @@ virtual void init(rclcpp::Node::SharedPtr& node)
     _allocator = std::make_shared<Ort::AllocatorWithDefaultOptions>();
     DumpParameters();
 
+    return true;
+
 }
 
-void OnnxProcessor::ProcessImage(const sensor_msgs::msg::Image::SharedPtr msg) 
+
+void OnnxProcessor::ProcessImage(const sensor_msgs::msg::Image::SharedPtr msg)
 {
     // Convert back to an OpenCV Image
     cv_bridge::CvImagePtr cv_ptr;
     cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
 
+    // Resize image
+    cv::Size mlSize(_tensorWidth, _tensorHeight);
+    cv::Mat image_resized;
     cv::Size s = cv_ptr->image.size();
-    cv::Rect ROI((s.width - 416) / 2, (s.height - 416) / 2, 416, 416);
-    cv::Mat image = cv_ptr->image(ROI);
+    float aspectRatio = (float)s.width / (float)s.height;
+    if (s.width <= 0 || s.height <= 0)
+    {
+        RCLCPP_ERROR(_node->get_logger(), "ONNX: irrational image size received; one dimention zero or less");
+        return;
+    }
+
+    if (_process == Crop && 
+        (uint)s.width > _tensorWidth && 
+        (uint)s.height > _tensorHeight)
+    {
+        // crop
+        cv::Rect ROI((s.width - _tensorWidth) / 2, (s.height - _tensorHeight) / 2, _tensorWidth, _tensorHeight);
+        image_resized = cv_ptr->image(ROI);
+    }
+    else if (_process == Resize)
+    {
+        cv::resize(cv_ptr->image, image_resized, mlSize, 0, 0, cv::INTER_CUBIC);
+    }
+    else
+    {
+        // We want to extract a correct apsect ratio from the center of the image
+        // but scale the whole frame so that there are no borders.
+
+        // First downsample
+        cv::Size downsampleSize;
+
+        if (aspectRatio > 1.0f)
+        {
+            downsampleSize.height = mlSize.height;
+            downsampleSize.width = mlSize.height * aspectRatio;
+        }
+        else
+        {
+            downsampleSize.width = mlSize.width;
+            downsampleSize.height = mlSize.width * aspectRatio;
+        }
+
+        cv::resize(cv_ptr->image, image_resized, downsampleSize, 0, 0, cv::INTER_CUBIC);
+
+        // now extract the center  
+        cv::Rect ROI((downsampleSize.width - _tensorWidth) / 2, (downsampleSize.height - _tensorHeight) / 2, _tensorWidth, _tensorHeight);
+        image_resized = image_resized(ROI);
+    }
+
 
     // Convert to RGB
     cv::Mat rgb_image;
-    cv::cvtColor(image, rgb_image, cv::COLOR_BGR2RGB);
+    cv::cvtColor(image_resized, rgb_image, cv::COLOR_BGR2RGB);
 
     // Set the image to 32-bit floating point values for tensorization.
     cv::Mat image_32_bit;
@@ -131,10 +216,8 @@ void OnnxProcessor::ProcessImage(const sensor_msgs::msg::Image::SharedPtr msg)
     cv::Mat channels[3];
     cv::split(image_32_bit, channels);
 
-    // TODO: [insert new onnx code] In the WinML version this is where the binding was created 
-    // It depended on yolo/pose processor vars like _channelCount, _colCount, _rowCount
-    // TODO: Add in "if(_fake)" flow
-
+    // TODO: [insert new onnx code]
+    // It might depend on yolo/pose processor vars like _channelCount, _colCount, _rowCount
     size_t input_tensor_size = _tensorHeight * _tensorWidth * 3;
 
     std::vector<float> input_tensor_values(input_tensor_size);
@@ -150,8 +233,8 @@ void OnnxProcessor::ProcessImage(const sensor_msgs::msg::Image::SharedPtr msg)
     Ort::Value input_tensor = Ort::Value::CreateTensor<float>(memory_info, input_tensor_values.data(), input_tensor_size, input_node_dims.data(), input_node_dims.size());
 
     // score model & input tensor, get back output tensor
-    std::vector<const char*> input_node_names = {"image"};
-    std::vector<const char*> output_node_names = {"grid"};
+    std::vector<const char*> input_node_names = _inName; 
+    std::vector<const char*> output_node_names = _outName; 
     auto output_tensors = _session->Run(Ort::RunOptions{nullptr}, input_node_names.data(), &input_tensor, 1, output_node_names.data(), 1);
 
     auto &output_tensor = output_tensors.front();
@@ -163,23 +246,7 @@ void OnnxProcessor::ProcessImage(const sensor_msgs::msg::Image::SharedPtr msg)
     output.resize(output_total_len);
     memcpy(&output[0], floatarr, output_total_len * sizeof(float));
 
-    // TODO: [insert new onnx code] In the WinML version this is where the results were retrieved and passed on to the process output function
-    // [replace with new onnx code below]
-    auto results = _session.Evaluate(binding, L"RunId"); 
-    if (!results.Succeeded())
-    {
-        RCLCPP_ERROR(_node->get_logger(), "ONNX: Evaluation of object tracker failed!");
-        return;
-    }
-
-    // Convert the results to a vector and parse the bounding boxes
-    auto grid_result = results.Outputs().Lookup(_outName).as<TensorFloat>().GetAsVectorView();
-    std::vector<float> grids(grid_result.Size());
-    winrt::array_view<float> grid_view(grids);
-    grid_result.GetMany(0, grid_view);
-
-    ProcessOutput(grids, image_resized);
-    // [replace with new onnx code above]
+    ProcessOutput(output, image_resized);
 }
 
 void OnnxProcessor::DumpParameters()
@@ -251,7 +318,7 @@ void OnnxProcessor::DumpParameters()
 
 
 /////////////////////////////////////////////// ONNX TRACKER //////////////////////////////////////////////////
-void OnnxTracker::init(rclcpp::Node::SharedPtr& node)
+bool OnnxTracker::init(rclcpp::Node::SharedPtr& node)
 {
     // Parameters.
     std::string trackerType;
@@ -274,5 +341,5 @@ void OnnxTracker::init(rclcpp::Node::SharedPtr& node)
         _processor = std::make_shared<yolo::YoloProcessor>();
     }
 
-    _processor->init(node);
+    return _processor->init(node);
 }

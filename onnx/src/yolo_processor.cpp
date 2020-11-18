@@ -3,8 +3,8 @@
 #include <sensor_msgs/msg/image.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 
-#include <onnx_object_detection/onnx_tracker.h>
-#include <onnx_object_detection/yolo_processor.h>
+#include <onnx/onnx_tracker.h>
+#include <onnx/yolo_processor.h>
 
 #include <algorithm>
 #include <numeric>
@@ -36,16 +36,18 @@ namespace yolo
         _normalize = false;
     }
 
-    void YoloProcessor::init()
+    bool YoloProcessor::init(rclcpp::Node::SharedPtr& node) 
     {
-        OnnxProcessor::init();
+        OnnxProcessor::init(node);
 
         _channelCount = CHANNEL_COUNT;
         _rowCount = ROW_COUNT;
         _colCount = COL_COUNT;
-        // _outName = L"grid"; // TODO: [insert new onnx]
-        // _inName = L"image";
+        _outName = {"grid"}; 
+        _inName = {"image"};
         _node->get_parameter_or("label", _label, kDefaultLabel);
+
+        return true;
     }
 
     void YoloProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
@@ -59,7 +61,6 @@ namespace yolo
 
         // If we found a person, send a message
         int count = 0;
-        std::vector<visualization_msgs::msg::Marker> markers;
         for (std::vector<YoloBox>::iterator it = boxes.begin(); it != boxes.end(); ++it)
         {
             if (it->label == _label)
@@ -88,27 +89,26 @@ namespace yolo
                 marker.color.g = 0.0;
                 marker.color.b = 1.0;
 
-                markers.push_back(marker);
+                publisher_->publish(marker);
+                
+                if (_debug)
+                {
+                    RCLCPP_INFO(_node->get_logger(), "matched label: %s", _label.c_str());
+                    // Draw a bounding box on the CV image
+                    cv::Scalar color(255, 255, 0);
+                    cv::Rect box;
+                    box.x = std::max<int>((int)it->x, 0);
+                    box.y = std::max<int>((int)it->y, 0);
+                    box.height = std::min<int>(image.rows - box.y, (int)it->height);
+                    box.width = std::min<int>(image.cols - box.x, (int)it->width);
+                    cv::rectangle(image, box, color, 2, 8, 0);
+                }
 
-                RCLCPP_INFO(_node->get_logger(), "matched label: %s", _label.c_str());
-                // Draw a bounding box on the CV image
-                cv::Scalar color(255, 255, 0);
-                cv::Rect box;
-                box.x = std::max<int>((int)it->x, 0);
-                box.y = std::max<int>((int)it->y, 0);
-                box.height = std::min<int>(image.rows - box.y, (int)it->height);
-                box.width = std::min<int>(image.cols - box.x, (int)it->width);
-                cv::rectangle(image, box, color, 2, 8, 0);
             }
         }
 
-        if (count > 0)
-        {
-            publisher_->publish(markers);
-        }
-
         // Always publish the resized image
-        auto msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg();
+        auto msg = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", image).toImageMsg();
         msg->header.frame_id = _linkName; 
         image_pub_->publish(*msg);
 
