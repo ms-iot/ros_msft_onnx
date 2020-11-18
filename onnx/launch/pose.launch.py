@@ -16,7 +16,7 @@ def generate_launch_description():
     return launch.LaunchDescription([
         DeclareLaunchArgument(
             'onnx_model_path_arg', 
-            default_value="temp/path", # TODO: fill in default value 
+            default_value="temp/path", # TODO: update default value 
             description="Onnx model path"),
         DeclareLaunchArgument(
             'model_bounds_arg', 
@@ -26,6 +26,10 @@ def generate_launch_description():
             'tracker_type_arg', 
             default_value="pose", 
             description="Tracker type: choose between yolo or pose"),
+        DeclareLaunchArgument(
+            'mesh_resource_arg', 
+            default_value="temp/path", # TODO: update default value 
+            description="Mesh resource arg"),
         launch_ros.actions.Node(
             package='onnx', executable='onnx', output='screen',
             name=['onnx'],

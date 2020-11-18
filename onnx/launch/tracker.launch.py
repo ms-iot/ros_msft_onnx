@@ -13,11 +13,18 @@ from ament_index_python.packages import get_package_share_directory
 def generate_launch_description():
     share_dir = get_package_share_directory('onnx')
     rviz_default_view = os.path.join(share_dir, 'rviz', 'default_view.rviz')
+    TinyYOLOv2ModelPath = os.path.join(
+        share_dir,
+        'share',
+        'onnx',
+        'models',
+        'tinyyolov2-8.onnx')
+
 
     return launch.LaunchDescription([
         DeclareLaunchArgument(
             'onnx_model_path_arg', 
-            default_value="temp/path", # TODO: fill in default value 
+            default_value= TinyYOLOv2ModelPath
             description="Onnx model path"),
         launch_ros.actions.Node(
             package='onnx', executable='onnx', output='screen',
