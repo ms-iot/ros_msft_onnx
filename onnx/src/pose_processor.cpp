@@ -5,12 +5,13 @@
 #include <visualization_msgs/msg/marker.hpp>
 
 #include <opencv2/calib3d/calib3d.hpp>
-#include <tf/LinearMath/Quaternion.h>
-#include <tf/transform_datatypes.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2/transform_datatypes.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
-#include <onnx_object_detection/onnx_tracker.h>
-#include <onnx_object_detection/pose_parser.h>
-#include <onnx_msgs/DetectedObjectPose.h> 
+#include <onnx/onnx_tracker.h>
+#include <onnx/pose_processor.h>
+#include "onnx_msgs/msg/detected_object_pose.hpp"
 
 #define EIGEN_DEFAULT_IO_FORMAT Eigen::IOFormat(10)
 #include <Eigen/Eigen>
@@ -45,18 +46,18 @@ PoseProcessor::PoseProcessor()
 }
 
 
-void PoseProcessor::init() 
+bool PoseProcessor::init(rclcpp::Node::SharedPtr& node) 
 {
     initPoseTables();
 
-    OnnxProcessor::init();
+    OnnxProcessor::init(node);
     _channelCount = CHANNEL_COUNT;
     _rowCount = ROW_COUNT;
     _colCount = COL_COUNT;
-    // _outName = L"218"; // TODO: [insert new onnx code]
-    // _inName = L"0";
+    _outName = {"218"};
+    _inName = {"0"};
 
-    if (!_node->get_parameter("mesh_rotation", _modelRPY)) ||
+    if (!_node->get_parameter("mesh_rotation", _modelRPY) ||
         _modelRPY.size() != 3)
     {
         _modelRPY.push_back(0.0f);
@@ -64,7 +65,7 @@ void PoseProcessor::init()
         _modelRPY.push_back(0.0f);
     }
 
-    if (!_node->get_parameter("mesh_scale", _modelScale)) ||
+    if (!_node->get_parameter("mesh_scale", _modelScale) ||
         _modelScale.size() != 3)
     {
         _modelScale.push_back(1.0f);
@@ -77,13 +78,13 @@ void PoseProcessor::init()
 
     _node->get_parameter("mesh_resource", meshResource);
 
-    std::vector<float> points;
+    std::vector<double> points;
     if (_node->get_parameter("model_bounds", points))
     {
         if (points.size() < 9 * 3)
         {
-            RCLCPP_ERROR("Model Bounds needs 9 3D floating points.");
-            return false;
+            RCLCPP_ERROR(_node->get_logger(), "Model Bounds needs 9 3D floating points.");
+            return false; 
         }
 
         for (int p = 0; p < points.size(); p += 3)
@@ -156,7 +157,7 @@ std::vector<float> operator+(const std::vector<float>& a, const std::vector<floa
     return ret;
 }
 
-void PoseProcessor::initMarker(visualization_msgs::Marker& marker, int32_t id, int32_t type, double x, double y, double z)
+void PoseProcessor::initMarker(visualization_msgs::msg::Marker& marker, int32_t id, int32_t type, double x, double y, double z)
 {
     marker.header.frame_id = _linkName;
     marker.header.stamp = rclcpp::Time();
@@ -164,7 +165,6 @@ void PoseProcessor::initMarker(visualization_msgs::Marker& marker, int32_t id, i
     marker.id = id;
     marker.type = type;
     marker.action = visualization_msgs::msg::Marker::ADD;
-    marker.lifetime = rclcpp::Duration();
     marker.mesh_use_embedded_materials = true;
     marker.pose.position.x = x;
     marker.pose.position.y = y;
@@ -207,15 +207,13 @@ void PoseProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
 
     if (_fake)
     {
-        std::vector<visualization_msgs::msg::Marker> markers;
         visualization_msgs::msg::Marker marker;
         marker.header.frame_id = _linkName;
-        marker.header.stamp = ros::Time();
+        marker.header.stamp = rclcpp::Time();
         marker.ns = "onnx_pose_detection";
         marker.id = 0;
         marker.type = visualization_msgs::msg::Marker::MESH_RESOURCE;
         marker.action = visualization_msgs::msg::Marker::ADD;
-        marker.lifetime = rclcpp::Duration();
         marker.mesh_resource = meshResource;
         marker.mesh_use_embedded_materials = true;
 
@@ -223,12 +221,14 @@ void PoseProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
         marker.pose.position.y = 0.0f;
         marker.pose.position.z = 0.0f;
 
-        tf::Quaternion modelQuat(0.0,0.0,0.0,1.0);
+        tf2::Quaternion modelQuat(0.0,0.0,0.0,1.0);
 
         modelQuat = _modelQuat * modelQuat;
         modelQuat.normalize();
 
-        tf::quaternionTFToMsg(modelQuat, marker.pose.orientation);
+        // tf::quaternionTFToMsg(modelQuat, marker.pose.orientation);
+        auto quat_msg = tf2::toMsg(modelQuat);
+        marker.pose.orientation = quat_msg;
 
         marker.scale.x = 1.0;
         marker.scale.y = 1.0;
@@ -238,8 +238,7 @@ void PoseProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
         marker.color.g = 0.0;
         marker.color.b = 1.0;
 
-        markers.push_back(marker);
-        detect_pub_->publish(markers);
+        publisher_->publish(marker);
         return;
     }
 
@@ -280,15 +279,15 @@ void PoseProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
             cv::Mat_<double> rvecRod(3, 3);
             cv::Rodrigues(rvec, rvecRod);
 
-            tf::Matrix3x3 tfRod(
+            tf2::Matrix3x3 tfRod(
                 rvecRod(0, 0), rvecRod(0, 1), rvecRod(0, 2),
                 rvecRod(1, 0), rvecRod(1, 1), rvecRod(1, 2),
                 rvecRod(2, 0), rvecRod(2, 1), rvecRod(2, 2)
                 );
-            tf::Quaternion poseQuat;
+            tf2::Quaternion poseQuat;
             tfRod.getRotation(poseQuat);
 
-            std::vector<visualization_msgs::msg::Marker> markers;
+            // std::vector<visualization_msgs::msg::Marker> markers;
             visualization_msgs::msg::Marker marker;
             double x = tvec.at<double>(0) / 1000.0;
             double y = tvec.at<double>(1) / 1000.0;
@@ -297,24 +296,29 @@ void PoseProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
             initMarker(marker, 0, visualization_msgs::msg::Marker::SPHERE, x, y, z);
             marker.mesh_resource = meshResource;
 
-            tf::quaternionTFToMsg(poseQuat, marker.pose.orientation);
-            markers.push_back(marker);
+            // tf::quaternionTFToMsg(poseQuat, marker.pose.orientation);
+            auto quat_msg = tf2::toMsg(poseQuat);
+            marker.pose.orientation = quat_msg;
+            publisher_->publish(marker);
+            // markers.push_back(marker);
 
-            onnx_msgs::DetectedObjectPose doPose; 
+            onnx_msgs::msg::DetectedObjectPose doPose; 
 
             doPose.header.frame_id = _linkName;
             doPose.header.stamp = rclcpp::Time();
-            tf::quaternionTFToMsg(poseQuat, doPose.pose.orientation);
+            // tf::quaternionTFToMsg(poseQuat, doPose.pose.orientation);
+            quat_msg = tf2::toMsg(poseQuat);
+            doPose.pose.orientation = quat_msg;
             doPose.pose.position.x = x;
             doPose.pose.position.y = y;
             doPose.pose.position.z = z;
             doPose.confidence = pose.confidence;
 
-            for (int i = 0; i < doPose.flatBounds.size(); i++)
+            for (int i = 0; i < doPose.flatbounds.size(); i++)
             {
-                doPose.flatBounds[i].x = pose.bounds[i].x;
-                doPose.flatBounds[i].y = pose.bounds[i].y;
-                doPose.flatBounds[i].z = 0;
+                doPose.flatbounds[i].x = pose.bounds[i].x;
+                doPose.flatbounds[i].y = pose.bounds[i].y;
+                doPose.flatbounds[i].z = 0;
             }
 
             detect_pose_pub_->publish(doPose);
@@ -324,14 +328,17 @@ void PoseProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
                 visualization_msgs::msg::Marker marker1;
                 initMarker(marker1, 1, visualization_msgs::msg::Marker::ARROW, x, y, z);
 
-                geometry_msgs::Point pt;
+                geometry_msgs::msg::Point pt;
                 marker1.points.push_back(pt);
                 pt.x = .1;
                 marker1.points.push_back(pt);
 
                 marker1.color.r = 1.0; marker1.color.g = 0.0; marker1.color.b = 0.0;
-                tf::quaternionTFToMsg(poseQuat, marker1.pose.orientation);
-                markers.push_back(marker1);
+                // tf::quaternionTFToMsg(poseQuat, marker1.pose.orientation);
+                auto quat_msg = tf2::toMsg(poseQuat);
+                marker.pose.orientation = quat_msg;
+                // markers.push_back(marker1);
+                publisher_->publish(marker1);
 
                 visualization_msgs::msg::Marker marker2;
                 initMarker(marker2, 2, visualization_msgs::msg::Marker::ARROW, x, y, z);
@@ -342,8 +349,11 @@ void PoseProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
                 marker2.points.push_back(pt);
 
                 marker2.color.r = 0.0; marker2.color.g = 1.0; marker2.color.b = 0.0;
-                tf::quaternionTFToMsg(poseQuat, marker2.pose.orientation);
-                markers.push_back(marker2);
+                // tf::quaternionTFToMsg(poseQuat, marker2.pose.orientation);
+                quat_msg = tf2::toMsg(poseQuat);
+                marker.pose.orientation = quat_msg;
+                // markers.push_back(marker2);
+                publisher_->publish(marker2);
 
                 visualization_msgs::msg::Marker marker3;
                 initMarker(marker3, 3, visualization_msgs::msg::Marker::ARROW, x, y, z);
@@ -354,11 +364,12 @@ void PoseProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
                 marker3.points.push_back(pt);
 
                 marker3.color.r = 0.0; marker3.color.g = 0.0; marker3.color.b = 1.0;
-                tf::quaternionTFToMsg(poseQuat, marker3.pose.orientation);
-                markers.push_back(marker3);
+                // tf::quaternionTFToMsg(poseQuat, marker3.pose.orientation);
+                quat_msg = tf2::toMsg(poseQuat);
+                marker.pose.orientation = quat_msg;
+                // markers.push_back(marker3);
+                publisher_->publish(marker3);
             }
-
-            detect_pub_->publish(markers);
         }
 
         if (_debug)
@@ -387,7 +398,7 @@ void PoseProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
     }
 
     // Always publish the resized image
-    auto msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg();
+    auto msg = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", image).toImageMsg();
     image_pub_->publish(*msg);
 
 }
