@@ -6,6 +6,7 @@ import launch
 import launch.actions
 import launch.substitutions
 import launch_ros.actions
+from launch.actions import DeclareLaunchArgument
 
 from ament_index_python.packages import get_package_share_directory
 
@@ -24,11 +25,11 @@ def generate_launch_description():
     return launch.LaunchDescription([
         DeclareLaunchArgument(
             'onnx_model_path_arg', 
-            default_value= TinyYOLOv2ModelPath
+            default_value= TinyYOLOv2ModelPath,
             description="Onnx model path"),
         launch_ros.actions.Node(
             package='onnx', executable='onnx', output='screen',
-            name=['onnx'],
+            name=['onnx_processor'],
             parameters=[
                 {'onnx_model_path': launch.substitutions.LaunchConfiguration('onnx_model_path_arg')},
                 {'link_name': 'camera'},
