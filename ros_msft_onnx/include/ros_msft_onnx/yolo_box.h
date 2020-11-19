@@ -25,7 +25,7 @@ namespace yolo
     public:
         YoloProcessor();
         
-        bool init(const YoloInitOptions &initOptions, ros::NodeHandle& nh, ros::NodeHandle& nhPrivate);
+        bool init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate);
     protected:
         std::vector<YoloBox> GetRecognizedObjects(std::vector<float> modelOutputs, float threshold = 0.3f);
         virtual void ProcessOutput(std::vector<float> output, cv::Mat& image);

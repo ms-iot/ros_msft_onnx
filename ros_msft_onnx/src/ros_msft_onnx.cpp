@@ -22,11 +22,12 @@ using wstring_to_utf8 = std::wstring_convert<convert_type, wchar_t>;
 const uint32_t kDefaultTensorWidth = 416;
 const uint32_t kDefaultTensorHeight = 416;
 
-std::string strFromHstring(hstring hstr)
+using convert_t = std::codecvt_utf8<wchar_t>;
+std::wstring_convert<convert_t, wchar_t> strconverter;
+
+static std::wstring to_wstring(std::string str)
 {
-    auto h = hstr.c_str();
-    auto converted = wstring_to_utf8().to_bytes(h);
-    return converted;
+    return strconverter.from_bytes(str);
 }
 
 OnnxProcessor::OnnxProcessor()
@@ -133,14 +134,33 @@ bool OnnxProcessor::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
     image_transport::ImageTransport it(nh);
     _cameraSub = it.subscribe(imageTopic.c_str(), 1, &OnnxProcessor::ProcessImage, this);
     _image_pub = it.advertise("tracked_objects/image", 1);
+    
+    /*
+    TODO (lilustga): add a failure path here, there's none in Onnx but it would be useful.
     try
-    {
-        // Load the ML model
-        hstring modelPath = hstring(wstring_to_utf8().from_bytes(_onnxModel));
-        _model = LearningModel::LoadFromFilePath(modelPath);
+    {*/
 
-        // Create an ONNX session
-        _session = LearningModelSession(_model, LearningModelDevice(LearningModelDeviceKind::Cpu));
+        //*************************************************************************
+        // initialize  enviroment...one enviroment per process
+        // enviroment maintains thread pools and other state info
+        _env = std::make_shared<Ort::Env>(ORT_LOGGING_LEVEL_WARNING, "test");
+
+        // initialize session options if needed
+        Ort::SessionOptions session_options;
+        session_options.SetIntraOpNumThreads(1);
+        session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
+
+        std::string modelString = _onnxModel;
+
+#ifdef _WIN32
+        auto modelFullPath = to_wstring(modelString).c_str();
+#else
+        auto modelFullPath = _onnxModel.c_str();
+#endif
+
+        _session = std::make_shared<Ort::Session>(*_env, modelFullPath, session_options);
+        _allocator = std::make_shared<Ort::AllocatorWithDefaultOptions>();
+        /*
     }
     catch (hresult_error const& e)
     {
@@ -152,7 +172,7 @@ bool OnnxProcessor::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
         ROS_ERROR("ONNX: Failed to Start ML Session: %s", e.what());
         return false;
     }
-
+*/
     return true;
 }
 
@@ -241,19 +261,36 @@ void OnnxProcessor::ProcessImage(const sensor_msgs::ImageConstPtr& image)
     cv::Mat channels[3];
     cv::split(image_32_bit, channels);
 
-    // Setup the model binding
-    LearningModelBinding binding(_session);
-    vector<int64_t> grid_shape({ 1, _channelCount, _colCount, _rowCount});
-    try
-    {
-        binding.Bind(_outName, TensorFloat::Create(grid_shape));
-    }
-    catch (hresult_error const& e)
-    {
-        ROS_ERROR("ONNX: Failed to bind!: %s", strFromHstring(e.message()).c_str());
-        return;
-    }
+    size_t input_tensor_size = _tensorHeight * _tensorWidth * 3;
 
+    std::vector<float> input_tensor_values(input_tensor_size);
+
+    memcpy(&input_tensor_values[0], (float *)channels[0].data, _tensorWidth * _tensorHeight * sizeof(float));
+    memcpy(&input_tensor_values[_tensorWidth * _tensorHeight], (float *)channels[1].data, _tensorWidth * _tensorHeight * sizeof(float));
+    memcpy(&input_tensor_values[2 * _tensorWidth * _tensorHeight], (float *)channels[2].data, _tensorWidth * _tensorHeight * sizeof(float));
+
+    auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
+    Ort::TypeInfo type_info = _session->GetInputTypeInfo(0);
+    auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
+    std::vector<int64_t> input_node_dims = {1, 3, 416, 416};
+    Ort::Value input_tensor = Ort::Value::CreateTensor<float>(memory_info, input_tensor_values.data(), input_tensor_size, input_node_dims.data(), input_node_dims.size());
+
+    // score model & input tensor, get back output tensor
+    std::vector<const char*> input_node_names = {"image"};
+    std::vector<const char*> output_node_names = {"grid"};
+    auto output_tensors = _session->Run(Ort::RunOptions{nullptr}, input_node_names.data(), &input_tensor, 1, output_node_names.data(), 1);
+
+    auto &output_tensor = output_tensors.front();
+    auto output_type_info = output_tensor.GetTensorTypeAndShapeInfo();
+    size_t output_total_len = output_type_info.GetElementCount();
+
+    float* floatarr = output_tensor.GetTensorMutableData<float>();
+    std::vector<float> output;
+    output.resize(output_total_len);
+    memcpy(&output[0], floatarr, output_total_len * sizeof(float));
+
+    ProcessOutput(output, image_resized);
+/*
     // Create a Tensor from the CV Mat and bind it to the session
     std::vector<float> image_data(1 * 3 * _tensorWidth * _tensorHeight);
     memcpy(&image_data[0], (float *)channels[0].data, _tensorWidth * _tensorHeight * sizeof(float));
@@ -276,44 +313,37 @@ void OnnxProcessor::ProcessImage(const sensor_msgs::ImageConstPtr& image)
         return;
     }
 
-    if (_fake)
+    // Call ONNX
+    try
     {
-        std::vector<float> grids;
+        auto results = _session.Evaluate(binding, L"RunId");
+        if (!results.Succeeded())
+        {
+            ROS_ERROR("ONNX: Evaluation of object tracker failed!");
+            return;
+        }
+
+        // Convert the results to a vector and parse the bounding boxes
+        auto grid_result = results.Outputs().Lookup(_outName).as<TensorFloat>().GetAsVectorView();
+        std::vector<float> grids(grid_result.Size());
+        winrt::array_view<float> grid_view(grids);
+        grid_result.GetMany(0, grid_view);
+
         ProcessOutput(grids, image_resized);
     }
-    else
+    catch (hresult_error const& e)
     {
-        // Call ONNX
-        try
-        {
-            auto results = _session.Evaluate(binding, L"RunId");
-            if (!results.Succeeded())
-            {
-                ROS_ERROR("ONNX: Evaluation of object tracker failed!");
-                return;
-            }
-
-            // Convert the results to a vector and parse the bounding boxes
-            auto grid_result = results.Outputs().Lookup(_outName).as<TensorFloat>().GetAsVectorView();
-            std::vector<float> grids(grid_result.Size());
-            winrt::array_view<float> grid_view(grids);
-            grid_result.GetMany(0, grid_view);
-
-            ProcessOutput(grids, image_resized);
-        }
-        catch (hresult_error const& e)
-        {
-            ROS_ERROR("ONNX: Evaluation of object tracker failed!: %s", strFromHstring(e.message()));
-            return;
-        }
-        catch (std::exception& e)
-        {
-            ROS_ERROR("ONNX: Evaluation of object tracker failed!: %s", e.what());
-            return;
-        }
+        ROS_ERROR("ONNX: Evaluation of object tracker failed!: %s", strFromHstring(e.message()));
+        return;
+    }
+    catch (std::exception& e)
+    {
+        ROS_ERROR("ONNX: Evaluation of object tracker failed!: %s", e.what());
+        return;
     }
 
     return;
+    */
 }
 
 bool OnnxTracker::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)

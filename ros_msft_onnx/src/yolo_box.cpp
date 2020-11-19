@@ -39,11 +39,6 @@ namespace yolo
     bool YoloProcessor::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
     {
         OnnxProcessor::init(nh, nhPrivate);
-        _channelCount = CHANNEL_COUNT;
-        _rowCount = ROW_COUNT;
-        _colCount = COL_COUNT;
-        _outName = L"grid";
-        _inName = L"image";
 
         nhPrivate.param("label", _label, kDefaultLabel);
 

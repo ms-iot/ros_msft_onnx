@@ -48,11 +48,6 @@ bool PoseProcessor::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
     initPoseTables();
 
     OnnxProcessor::init(nh, nhPrivate);
-    _channelCount = CHANNEL_COUNT;
-    _rowCount = ROW_COUNT;
-    _colCount = COL_COUNT;
-    _outName = L"218";
-    _inName = L"0";
 
     if (!nhPrivate.getParam("mesh_rotation", _modelRPY) ||
         _modelRPY.size() != 3)
@@ -203,43 +198,43 @@ void PoseProcessor::initMarker(visualization_msgs::Marker& marker, int32_t id, i
 
 void PoseProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
 {
+    
+    if (_fake)	
+    {	
+        std::vector<visualization_msgs::Marker> markers;	
+        visualization_msgs::Marker marker;	
+        marker.header.frame_id = _linkName;	
+        marker.header.stamp = ros::Time();	
+        marker.ns = "onnx";	
+        marker.id = 0;	
+        marker.type = visualization_msgs::Marker::MESH_RESOURCE;	
+        marker.action = visualization_msgs::Marker::ADD;	
+        marker.lifetime = ros::Duration();	
+        marker.mesh_resource = meshResource;	
+        marker.mesh_use_embedded_materials = true;	
 
-    if (_fake)
-    {
-        std::vector<visualization_msgs::Marker> markers;
-        visualization_msgs::Marker marker;
-        marker.header.frame_id = _linkName;
-        marker.header.stamp = ros::Time();
-        marker.ns = "onnx";
-        marker.id = 0;
-        marker.type = visualization_msgs::Marker::MESH_RESOURCE;
-        marker.action = visualization_msgs::Marker::ADD;
-        marker.lifetime = ros::Duration();
-        marker.mesh_resource = meshResource;
-        marker.mesh_use_embedded_materials = true;
+        marker.pose.position.x = 0.30f;	
+        marker.pose.position.y = 0.0f;	
+        marker.pose.position.z = 0.0f;	
 
-        marker.pose.position.x = 0.30f;
-        marker.pose.position.y = 0.0f;
-        marker.pose.position.z = 0.0f;
+        tf::Quaternion modelQuat(0.0,0.0,0.0,1.0);	
 
-        tf::Quaternion modelQuat(0.0,0.0,0.0,1.0);
+        modelQuat = _modelQuat * modelQuat;	
+        modelQuat.normalize();	
 
-        modelQuat = _modelQuat * modelQuat;
-        modelQuat.normalize();
+        tf::quaternionTFToMsg(modelQuat, marker.pose.orientation);	
 
-        tf::quaternionTFToMsg(modelQuat, marker.pose.orientation);
+        marker.scale.x = 1.0;	
+        marker.scale.y = 1.0;	
+        marker.scale.z = 1.0;	
+        marker.color.a = 1.0;	
+        marker.color.r = 0.0;	
+        marker.color.g = 0.0;	
+        marker.color.b = 1.0;	
 
-        marker.scale.x = 1.0;
-        marker.scale.y = 1.0;
-        marker.scale.z = 1.0;
-        marker.color.a = 1.0;
-        marker.color.r = 0.0;
-        marker.color.g = 0.0;
-        marker.color.b = 1.0;
-
-        markers.push_back(marker);
-        _detect_pub.publish(markers);
-        return;
+        markers.push_back(marker);	
+        _detect_pub.publish(markers);	
+        return;	
     }
 
     std::vector<int> cuboid_edges_v1({1, 2, 3, 4, 5, 6, 7, 8, 2, 1, 3, 4});

@@ -18,7 +18,6 @@ int main(int argc, char **argv)
     }
     */
 
-    winrt::init_apartment();
     ros::init(argc, argv, "ros_msft_onnx");
 
     ros::NodeHandle nh;
