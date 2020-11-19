@@ -1,5 +1,6 @@
 #include <std_msgs/msg/string.hpp>
 #include <sensor_msgs/msg/image.hpp>
+#include <ament_index_cpp/get_resource.hpp> // TODO: remove
 
 #include <onnx/onnx_tracker.h>
 #include <onnx/yolo_processor.h>
@@ -114,7 +115,7 @@ bool OnnxProcessor::init(rclcpp::Node::SharedPtr& node)
     publisher_ = _node->create_publisher<visualization_msgs::msg::Marker>(visual_marker_topic_, 10);
     image_pub_ = _node->create_publisher<sensor_msgs::msg::Image>(image_pub_topic_, 10);
     subscription_ = _node->create_subscription<sensor_msgs::msg::Image>(
-        image_topic_, 10, std::bind(&OnnxProcessor::ProcessImage, _node, _1));
+        image_topic_, 10, std::bind(&OnnxProcessor::ProcessImage, this, _1));
     detect_pose_pub_ = _node->create_publisher<onnx_msgs::msg::DetectedObjectPose>(detect_pose_topic_, 1); 
     
     // Generate onnx session
@@ -334,7 +335,7 @@ bool OnnxTracker::init(rclcpp::Node::SharedPtr& node)
         }
     }
 
-    // Tracker time was no specified 
+    // Tracker type was not specified 
     if (_processor == nullptr)
     {
         RCLCPP_INFO(node->get_logger(), "Onnx Tracker: Processor not specified, selecting yolo as the default");
