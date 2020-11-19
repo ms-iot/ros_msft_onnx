@@ -1,0 +1,25 @@
+name: Build
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+defaults:
+  run:
+    shell: cmd
+    
+jobs:
+  build_and_test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+          os: [windows-latest]
+    steps:
+    - uses: ros-tooling/setup-ros@0.0.25
+    - uses: ros-tooling/action-ros-ci@0.0.19
+      with:
+        package-name: onnx_object_detection
+        target-ros2-distro: foxy
+        vcs-repo-file-url: https://raw.githubusercontent.com/ooeygui/ros_msft_onnx/master/.github/ci.repos
+
