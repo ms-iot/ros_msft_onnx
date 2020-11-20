@@ -1,25 +1,38 @@
-name: Build
+name: CI
 on:
   pull_request:
   push:
     branches:
-      - master
-defaults:
-  run:
-    shell: cmd
-    
+      - foxy-devel
+  schedule:
+    # every Monday
+    - cron:  '0 0 * * 1'
+
 jobs:
-  build_and_test:
-    runs-on: ${{ matrix.os }}
+  build:
+    runs-on: [windows-latest]
     strategy:
       fail-fast: false
       matrix:
-          os: [windows-latest]
+        ROSDISTRO: [foxy]
     steps:
-    - uses: ros-tooling/setup-ros@0.0.26
-    - uses: ros-tooling/action-ros-ci@0.1.0
+    - uses: actions/checkout@v2
       with:
-        package-name: onnx_object_detection
-        target-ros2-distro: foxy
-        vcs-repo-file-url: https://raw.githubusercontent.com/ooeygui/ros_msft_onnx/master/.github/ci.repos
+        submodules: recursive
+        path: src
+    - name: Install
+      shell: cmd
+      run: |
+        choco sources add -n=roswin -s https://aka.ms/ros/public --priority 1
+        choco install ros-%ROSDISTRO%-desktop -y --no-progress
+      env:
+        ROSDISTRO: ${{ matrix.ROSDISTRO }}
+    - name: Build
+      shell: cmd
+      run: |
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64
+        call "C:\opt\ros\%ROSDISTRO%\x64\setup.bat"
+        colcon build  --event-handlers console_cohesion+
+      env:
+        ROSDISTRO: ${{ matrix.ROSDISTRO }}
 
