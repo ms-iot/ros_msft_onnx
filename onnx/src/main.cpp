@@ -15,6 +15,7 @@ int main(int argc, char **argv)
     if(tracker.init(node))
     {
         rclcpp::spin(node);
+        RCLCPP_INFO(node->get_logger(), "Shutting down onnx_processor node");
         rclcpp::shutdown();
         return 0;
     }
