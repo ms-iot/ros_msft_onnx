@@ -144,7 +144,7 @@ bool OnnxProcessor::init(rclcpp::Node::SharedPtr& node)
     image_pub_ = _node->create_publisher<sensor_msgs::msg::Image>(image_pub_topic_, 10);
     subscription_ = _node->create_subscription<sensor_msgs::msg::Image>(
         image_topic_, 10, std::bind(&OnnxProcessor::ProcessImage, this, _1));
-    detect_pose_pub_ = _node->create_publisher<onnx_msgs::msg::DetectedObjectPose>(detect_pose_topic_, 1); 
+    detect_pose_pub_ = _node->create_publisher<ros_msft_onnx_msgs::msg::DetectedObjectPose>(detect_pose_topic_, 1); 
 
     return true;
 
@@ -234,9 +234,9 @@ void OnnxProcessor::ProcessImage(const sensor_msgs::msg::Image::SharedPtr msg)
 
     std::vector<float> input_tensor_values(input_tensor_size);
 
-    memcpy(&input_tensor_values[0], (float *)channels[0].data, _tensorWidth * _tensorHeight * sizeof(float));
-    memcpy(&input_tensor_values[_tensorWidth * _tensorHeight], (float *)channels[1].data, _tensorWidth * _tensorHeight * sizeof(float));
-    memcpy(&input_tensor_values[2 * _tensorWidth * _tensorHeight], (float *)channels[2].data, _tensorWidth * _tensorHeight * sizeof(float));
+    memmove(&input_tensor_values[0], (float *)channels[0].data, _tensorWidth * _tensorHeight * sizeof(float));
+    memmove(&input_tensor_values[_tensorWidth * _tensorHeight], (float *)channels[1].data, _tensorWidth * _tensorHeight * sizeof(float));
+    memmove(&input_tensor_values[2 * _tensorWidth * _tensorHeight], (float *)channels[2].data, _tensorWidth * _tensorHeight * sizeof(float));
 
     auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
     Ort::TypeInfo type_info = _session->GetInputTypeInfo(0);
@@ -256,7 +256,7 @@ void OnnxProcessor::ProcessImage(const sensor_msgs::msg::Image::SharedPtr msg)
     float* floatarr = output_tensor.GetTensorMutableData<float>();
     std::vector<float> output;
     output.resize(output_total_len);
-    memcpy(&output[0], floatarr, output_total_len * sizeof(float));
+    memmove(&output[0], floatarr, output_total_len * sizeof(float));
 
     ProcessOutput(output, image_resized);
 }

@@ -8,7 +8,7 @@
 
 #include <onnxruntime_cxx_api.h>
 
-#include "onnx_msgs/msg/detected_object_pose.hpp"
+#include "ros_msft_onnx_msgs/msg/detected_object_pose.hpp"
 
 
 class OnnxProcessor
@@ -70,7 +70,7 @@ protected:
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr subscription_; 
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr publisher_; 
     rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr image_pub_; 
-    rclcpp::Publisher<onnx_msgs::msg::DetectedObjectPose>::SharedPtr detect_pose_pub_; 
+    rclcpp::Publisher<ros_msft_onnx_msgs::msg::DetectedObjectPose>::SharedPtr detect_pose_pub_; 
 };
 
 class OnnxTracker

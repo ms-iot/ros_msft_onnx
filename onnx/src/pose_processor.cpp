@@ -11,7 +11,7 @@
 
 #include <onnx/onnx_tracker.h>
 #include <onnx/pose_processor.h>
-#include "onnx_msgs/msg/detected_object_pose.hpp"
+#include "ros_msft_onnx_msgs/msg/detected_object_pose.hpp"
 
 #define EIGEN_DEFAULT_IO_FORMAT Eigen::IOFormat(10)
 #include <Eigen/Eigen>
@@ -298,7 +298,7 @@ void PoseProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
             marker.pose.orientation = quat_msg;
             publisher_->publish(marker);
 
-            onnx_msgs::msg::DetectedObjectPose doPose; 
+            ros_msft_onnx_msgs::msg::DetectedObjectPose doPose; 
 
             doPose.header.frame_id = _linkName;
             doPose.header.stamp = rclcpp::Time();

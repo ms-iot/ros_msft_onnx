@@ -16,7 +16,7 @@ To run this sample, a camera will be required to be installed and ready to use o
 You can begin with the below launch file. It will bring up RViz tool where you can observe the interaction between `object_detection` and `cv_camera` nodes.
 
 ```Batchfile
-ros2 launch onnx tracker.launch.py
+ros2 launch ros_msft_onnx tracker.launch.py
 ```
 
 ## Subscribed Topics
@@ -61,6 +61,6 @@ To run this sample, a camera will be required to be installed and ready to use o
 You can begin with the below launch file.
 
 ```Batchfile
-ros2 launch onnx pose.launch.py
+ros2 launch ros_msft_onnx pose.launch.py
 ```
 TODO: Fill in.

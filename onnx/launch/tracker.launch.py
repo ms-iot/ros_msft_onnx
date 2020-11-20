@@ -12,7 +12,7 @@ from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
-    share_dir = get_package_share_directory('onnx')
+    share_dir = get_package_share_directory('ros_msft_onnx')
     rviz_default_view = os.path.join(share_dir, 'rviz', 'default_view.rviz')
     TinyYOLOv2ModelPath = os.path.join(
         share_dir,
@@ -26,8 +26,8 @@ def generate_launch_description():
             default_value= TinyYOLOv2ModelPath,
             description="Onnx model path"),
         launch_ros.actions.Node(
-            package='onnx', executable='onnx', output='screen',
-            name=['onnx_processor'],
+            package='ros_msft_onnx', executable='ros_msft_onnx', output='screen',
+            name=['ros_msft_onnx'],
             parameters=[
                 {'onnx_model_path': launch.substitutions.LaunchConfiguration('onnx_model_path_arg')},
                 {'link_name': 'camera'},
