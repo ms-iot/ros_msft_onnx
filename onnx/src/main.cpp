@@ -8,14 +8,13 @@
 int main(int argc, char **argv)
 {
     rclcpp::init(argc, argv);
-    rclcpp::Node::SharedPtr node = rclcpp::Node::make_shared("onnx_processor");
+    rclcpp::Node::SharedPtr node = rclcpp::Node::make_shared("ros_msft_onnx");
 
     OnnxTracker tracker;
     
     if(tracker.init(node))
     {
         rclcpp::spin(node);
-        RCLCPP_INFO(node->get_logger(), "Shutting down onnx_processor node");
         rclcpp::shutdown();
         return 0;
     }

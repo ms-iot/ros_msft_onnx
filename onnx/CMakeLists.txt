@@ -3,7 +3,7 @@
 
 cmake_minimum_required(VERSION 3.5)
 
-project(onnx)
+project(ros_msft_onnx)
 
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
@@ -22,7 +22,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(onnxruntime_vendor REQUIRED)
-find_package(onnx_msgs REQUIRED)
+find_package(ros_msft_onnx_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)
@@ -53,7 +53,7 @@ ament_target_dependencies(${PROJECT_NAME}
   visualization_msgs
   cv_bridge
   onnxruntime_vendor
-  onnx_msgs
+  ros_msft_onnx_msgs
   tf2
   geometry_msgs)
 
