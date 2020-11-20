@@ -17,7 +17,7 @@ jobs:
           os: [windows-latest]
     steps:
     - uses: ros-tooling/setup-ros@0.0.26
-    - uses: ros-tooling/action-ros-ci@0.0.19
+    - uses: ros-tooling/action-ros-ci@0.1.0
       with:
         package-name: onnx_object_detection
         target-ros2-distro: foxy
