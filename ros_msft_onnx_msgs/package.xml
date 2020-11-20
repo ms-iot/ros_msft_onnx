@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <package format="3">
-  <name>onnx_msgs</name>
+  <name>ros_msft_onnx_msgs</name>
   <version>1.0.0</version>
-  <description>The onnx_msgs package</description>
+  <description>The ros_msft_onnx_msgs package</description>
   
-  <maintainer email="lamadio@microsoft.com">Lou Amadio</maintainer>
+  <maintainer email="riotsquad@microsoft.com">Lou Amadio</maintainer>
   
   <license>MIT</license>
   

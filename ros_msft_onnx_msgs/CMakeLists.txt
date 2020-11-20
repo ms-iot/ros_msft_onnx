@@ -2,9 +2,9 @@
 # Licensed under the MIT License.
 
 cmake_minimum_required(VERSION 3.5)
-project(onnx_msgs)
+project(ros_msft_onnx_msgs)
 
-find_package(ament_cmake REQUIRED) # TODO: Needed?
+find_package(ament_cmake REQUIRED)
 
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
