@@ -25,10 +25,8 @@ find_package(onnxruntime_vendor REQUIRED)
 find_package(onnx_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(geometry_msgs REQUIRED)
-
-# TODO: Are any of these packages necessary? 
-# find_package(Eigen3 REQUIRED)
-# find_package(OpenCV REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(OpenCV REQUIRED)
 
 # The node expects to use the Tiny YOLO model available in the ONNX model zoo.
 file(DOWNLOAD

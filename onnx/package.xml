@@ -13,7 +13,7 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <!-- <depend>eigen</depend> TODO: Needed?-->
+  <depend>eigen</depend>
   <depend>geometry_msgs</depend>
   <depend>ament_index_cpp</depend>
   <depend>onnxruntime_vendor</depend>
