@@ -38,7 +38,8 @@ def generate_launch_description():
                 {'onnx_model_path': launch.substitutions.LaunchConfiguration('onnx_model_path_arg')},
                 {'model_bounds': launch.substitutions.LaunchConfiguration('model_bounds_arg')},
                 {'tracker_type': launch.substitutions.LaunchConfiguration('tracker_type_arg')},
-                {'mesh_resource': launch.substitutions.LaunchConfiguration('mesh_resource_arg')}
+                {'mesh_resource': launch.substitutions.LaunchConfiguration('mesh_resource_arg')}, 
+                {'tracker_type': 'pose'}
             ]),
         launch_ros.actions.Node(
             package='cv_camera', executable='cv_camera_node', output='screen',
