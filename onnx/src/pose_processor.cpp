@@ -226,7 +226,6 @@ void PoseProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
         modelQuat = _modelQuat * modelQuat;
         modelQuat.normalize();
 
-        // tf::quaternionTFToMsg(modelQuat, marker.pose.orientation);
         auto quat_msg = tf2::toMsg(modelQuat);
         marker.pose.orientation = quat_msg;
 
@@ -287,7 +286,6 @@ void PoseProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
             tf2::Quaternion poseQuat;
             tfRod.getRotation(poseQuat);
 
-            // std::vector<visualization_msgs::msg::Marker> markers;
             visualization_msgs::msg::Marker marker;
             double x = tvec.at<double>(0) / 1000.0;
             double y = tvec.at<double>(1) / 1000.0;
@@ -296,17 +294,14 @@ void PoseProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
             initMarker(marker, 0, visualization_msgs::msg::Marker::SPHERE, x, y, z);
             marker.mesh_resource = meshResource;
 
-            // tf::quaternionTFToMsg(poseQuat, marker.pose.orientation);
             auto quat_msg = tf2::toMsg(poseQuat);
             marker.pose.orientation = quat_msg;
             publisher_->publish(marker);
-            // markers.push_back(marker);
 
             onnx_msgs::msg::DetectedObjectPose doPose; 
 
             doPose.header.frame_id = _linkName;
             doPose.header.stamp = rclcpp::Time();
-            // tf::quaternionTFToMsg(poseQuat, doPose.pose.orientation);
             quat_msg = tf2::toMsg(poseQuat);
             doPose.pose.orientation = quat_msg;
             doPose.pose.position.x = x;
@@ -334,10 +329,8 @@ void PoseProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
                 marker1.points.push_back(pt);
 
                 marker1.color.r = 1.0; marker1.color.g = 0.0; marker1.color.b = 0.0;
-                // tf::quaternionTFToMsg(poseQuat, marker1.pose.orientation);
                 auto quat_msg = tf2::toMsg(poseQuat);
                 marker.pose.orientation = quat_msg;
-                // markers.push_back(marker1);
                 publisher_->publish(marker1);
 
                 visualization_msgs::msg::Marker marker2;
@@ -349,10 +342,8 @@ void PoseProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
                 marker2.points.push_back(pt);
 
                 marker2.color.r = 0.0; marker2.color.g = 1.0; marker2.color.b = 0.0;
-                // tf::quaternionTFToMsg(poseQuat, marker2.pose.orientation);
                 quat_msg = tf2::toMsg(poseQuat);
                 marker.pose.orientation = quat_msg;
-                // markers.push_back(marker2);
                 publisher_->publish(marker2);
 
                 visualization_msgs::msg::Marker marker3;
@@ -364,10 +355,8 @@ void PoseProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
                 marker3.points.push_back(pt);
 
                 marker3.color.r = 0.0; marker3.color.g = 0.0; marker3.color.b = 1.0;
-                // tf::quaternionTFToMsg(poseQuat, marker3.pose.orientation);
                 quat_msg = tf2::toMsg(poseQuat);
                 marker.pose.orientation = quat_msg;
-                // markers.push_back(marker3);
                 publisher_->publish(marker3);
             }
         }
