@@ -16,8 +16,6 @@ def generate_launch_description():
     rviz_default_view = os.path.join(share_dir, 'rviz', 'default_view.rviz')
     TinyYOLOv2ModelPath = os.path.join(
         share_dir,
-        'share',
-        'onnx',
         'models',
         'tinyyolov2-8.onnx')
 
@@ -33,11 +31,11 @@ def generate_launch_description():
             parameters=[
                 {'onnx_model_path': launch.substitutions.LaunchConfiguration('onnx_model_path_arg')},
                 {'link_name': 'camera'},
-                {'confidence': '0.5'},
-                {'tensor_width': '416'},
-                {'tensor_height': '416'},
+                {'confidence': 0.5},
+                {'tensor_width': 416},
+                {'tensor_height': 416},
                 {'tracker_type': 'yolo'},
-                {'debug': 'true'}
+                {'debug': True}
             ]),
         launch_ros.actions.Node(
             package='cv_camera', executable='cv_camera_node', output='screen',
