@@ -1,6 +1,5 @@
 #include <std_msgs/msg/string.hpp>
 #include <sensor_msgs/msg/image.hpp>
-#include <ament_index_cpp/get_resource.hpp> // TODO: remove
 
 #include <onnx/onnx_tracker.h>
 #include <onnx/yolo_processor.h>
@@ -37,6 +36,7 @@ _confidence (0.70f)
 bool OnnxProcessor::init(rclcpp::Node::SharedPtr& node)
 {
     _node = node;
+
     _node->get_parameter("confidence", _confidence);
     _node->get_parameter("debug", _debug);
     _node->get_parameter("link_name", _linkName);
@@ -107,17 +107,6 @@ bool OnnxProcessor::init(rclcpp::Node::SharedPtr& node)
         }
     }
 
-    std::string image_topic_ = "image_raw";
-    std::string visual_marker_topic_ = "visual_markers";
-    std::string image_pub_topic_ = "image_debug_raw";
-    std::string detect_pose_topic_ = "detected_object";
-
-    publisher_ = _node->create_publisher<visualization_msgs::msg::Marker>(visual_marker_topic_, 10);
-    image_pub_ = _node->create_publisher<sensor_msgs::msg::Image>(image_pub_topic_, 10);
-    subscription_ = _node->create_subscription<sensor_msgs::msg::Image>(
-        image_topic_, 10, std::bind(&OnnxProcessor::ProcessImage, this, _1));
-    detect_pose_pub_ = _node->create_publisher<onnx_msgs::msg::DetectedObjectPose>(detect_pose_topic_, 1); 
-    
     // Generate onnx session
     //*************************************************************************
     // initialize  enviroment...one enviroment per process
@@ -139,6 +128,24 @@ bool OnnxProcessor::init(rclcpp::Node::SharedPtr& node)
     _allocator = std::make_shared<Ort::AllocatorWithDefaultOptions>();
     DumpParameters();
 
+
+    // Set up publishers and subscribers 
+    std::string image_topic_ = "image_raw";
+    std::string visual_marker_topic_ = "visual_markers";
+    std::string image_pub_topic_ = "image_debug_raw";
+    std::string detect_pose_topic_ = "detected_object";
+
+    _node->get_parameter("image_topic", image_topic_);
+    _node->get_parameter("visual_marker_topic", visual_marker_topic_);
+    _node->get_parameter("image_debug_topic", image_pub_topic_);
+
+
+    publisher_ = _node->create_publisher<visualization_msgs::msg::Marker>(visual_marker_topic_, 10);
+    image_pub_ = _node->create_publisher<sensor_msgs::msg::Image>(image_pub_topic_, 10);
+    subscription_ = _node->create_subscription<sensor_msgs::msg::Image>(
+        image_topic_, 10, std::bind(&OnnxProcessor::ProcessImage, this, _1));
+    detect_pose_pub_ = _node->create_publisher<onnx_msgs::msg::DetectedObjectPose>(detect_pose_topic_, 1); 
+
     return true;
 
 }
@@ -146,6 +153,12 @@ bool OnnxProcessor::init(rclcpp::Node::SharedPtr& node)
 
 void OnnxProcessor::ProcessImage(const sensor_msgs::msg::Image::SharedPtr msg)
 {
+    if (_session == nullptr)
+    {
+        // Failed to initialize model or do not have one yet.
+        return;
+    }
+
     // Convert back to an OpenCV Image
     cv_bridge::CvImagePtr cv_ptr;
     cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
@@ -217,8 +230,6 @@ void OnnxProcessor::ProcessImage(const sensor_msgs::msg::Image::SharedPtr msg)
     cv::Mat channels[3];
     cv::split(image_32_bit, channels);
 
-    // TODO: [insert new onnx code]
-    // It might depend on yolo/pose processor vars like _channelCount, _colCount, _rowCount
     size_t input_tensor_size = _tensorHeight * _tensorWidth * 3;
 
     std::vector<float> input_tensor_values(input_tensor_size);
@@ -321,6 +332,20 @@ void OnnxProcessor::DumpParameters()
 /////////////////////////////////////////////// ONNX TRACKER //////////////////////////////////////////////////
 bool OnnxTracker::init(rclcpp::Node::SharedPtr& node)
 {
+    // Declare nodes parameters 
+    node->declare_parameter("tracker_type");
+    node->declare_parameter("onnx_model_path");
+    node->declare_parameter("link_name");
+    node->declare_parameter("confidence");
+    node->declare_parameter("tensor_width");
+    node->declare_parameter("tensor_height");
+    node->declare_parameter("debug");
+    node->declare_parameter("image_processing");
+    node->declare_parameter("label");
+    node->declare_parameter("image_topic");
+    node->declare_parameter("visual_marker_topic");
+    node->declare_parameter("image_debug_topic");
+    
     // Parameters.
     std::string trackerType;
     if (node->get_parameter("tracker_type", trackerType))

@@ -75,8 +75,6 @@ protected:
 
 class OnnxTracker
 {
-    rclcpp::Node::SharedPtr node;
-
     std::shared_ptr<OnnxProcessor> _processor;
 
 public: 
