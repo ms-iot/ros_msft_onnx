@@ -49,7 +49,7 @@ Visualization Manager:
       Max Value: 1
       Median window: 5
       Min Value: 0
-      Name: Image
+      Name: Image Raw
       Normalize Range: true
       Topic:
         Depth: 5
@@ -75,14 +75,14 @@ Visualization Manager:
       Max Value: 1
       Median window: 5
       Min Value: 0
-      Name: Image
+      Name: Image Output
       Normalize Range: true
       Topic:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /image_debug
+        Value: /image_debug_raw
       Value: true
   Enabled: true
   Global Options:
