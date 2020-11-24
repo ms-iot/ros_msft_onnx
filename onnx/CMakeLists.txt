@@ -37,6 +37,7 @@ file(DOWNLOAD
 
 include_directories(
   include
+  ${EIGEN3_INCLUDE_DIR}
 )
 
 add_executable(${PROJECT_NAME}
