@@ -272,78 +272,31 @@ void OnnxProcessor::ProcessImage(const sensor_msgs::ImageConstPtr& image)
     auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
     Ort::TypeInfo type_info = _session->GetInputTypeInfo(0);
     auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
-    std::vector<int64_t> input_node_dims = {1, 3, 416, 416};
+    std::vector<int64_t> input_node_dims = {1, 3, _tensorWidth, _tensorHeight};
     Ort::Value input_tensor = Ort::Value::CreateTensor<float>(memory_info, input_tensor_values.data(), input_tensor_size, input_node_dims.data(), input_node_dims.size());
 
     // score model & input tensor, get back output tensor
-    std::vector<const char*> input_node_names = {"image"};
-    std::vector<const char*> output_node_names = {"grid"};
-    auto output_tensors = _session->Run(Ort::RunOptions{nullptr}, input_node_names.data(), &input_tensor, 1, output_node_names.data(), 1);
-
-    auto &output_tensor = output_tensors.front();
-    auto output_type_info = output_tensor.GetTensorTypeAndShapeInfo();
-    size_t output_total_len = output_type_info.GetElementCount();
-
-    float* floatarr = output_tensor.GetTensorMutableData<float>();
     std::vector<float> output;
-    output.resize(output_total_len);
-    memcpy(&output[0], floatarr, output_total_len * sizeof(float));
+    try
+    {
+        auto output_tensors = _session->Run(Ort::RunOptions{nullptr}, _input_node_names.data(), &input_tensor, 1, _output_node_names.data(), 1);
+
+        auto &output_tensor = output_tensors.front();
+        auto output_type_info = output_tensor.GetTensorTypeAndShapeInfo();
+        size_t output_total_len = output_type_info.GetElementCount();
+
+        float* floatarr = output_tensor.GetTensorMutableData<float>();
+        
+        output.resize(output_total_len);
+        memcpy(&output[0], floatarr, output_total_len * sizeof(float));
+    }
+    catch (std::exception& e)
+    {
+        ROS_ERROR("ONNX: Session Failed!: %s", e.what());
+        return;
+    }
 
     ProcessOutput(output, image_resized);
-/*
-    // Create a Tensor from the CV Mat and bind it to the session
-    std::vector<float> image_data(1 * 3 * _tensorWidth * _tensorHeight);
-    memcpy(&image_data[0], (float *)channels[0].data, _tensorWidth * _tensorHeight * sizeof(float));
-    memcpy(&image_data[_tensorWidth * _tensorHeight], (float *)channels[1].data, _tensorWidth * _tensorHeight * sizeof(float));
-    memcpy(&image_data[2 * _tensorWidth * _tensorHeight], (float *)channels[2].data, _tensorWidth * _tensorHeight * sizeof(float));
-    TensorFloat image_tensor = TensorFloat::CreateFromArray({ 1, 3, _tensorWidth, _tensorHeight }, image_data);
-
-    try
-    {
-        binding.Bind(_inName, image_tensor);
-    }
-    catch (hresult_error const& e)
-    {
-        ROS_ERROR("ONNX: Failed to bind!: %s", strFromHstring(e.message()).c_str());
-        return;
-    }
-    catch (std::exception& e)
-    {
-        ROS_ERROR("ONNX: Failed to bind!: %s", e.what());
-        return;
-    }
-
-    // Call ONNX
-    try
-    {
-        auto results = _session.Evaluate(binding, L"RunId");
-        if (!results.Succeeded())
-        {
-            ROS_ERROR("ONNX: Evaluation of object tracker failed!");
-            return;
-        }
-
-        // Convert the results to a vector and parse the bounding boxes
-        auto grid_result = results.Outputs().Lookup(_outName).as<TensorFloat>().GetAsVectorView();
-        std::vector<float> grids(grid_result.Size());
-        winrt::array_view<float> grid_view(grids);
-        grid_result.GetMany(0, grid_view);
-
-        ProcessOutput(grids, image_resized);
-    }
-    catch (hresult_error const& e)
-    {
-        ROS_ERROR("ONNX: Evaluation of object tracker failed!: %s", strFromHstring(e.message()));
-        return;
-    }
-    catch (std::exception& e)
-    {
-        ROS_ERROR("ONNX: Evaluation of object tracker failed!: %s", e.what());
-        return;
-    }
-
-    return;
-    */
 }
 
 bool OnnxTracker::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)

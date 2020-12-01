@@ -48,6 +48,8 @@ bool PoseProcessor::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
     initPoseTables();
 
     OnnxProcessor::init(nh, nhPrivate);
+    _input_node_names = {"0"};
+    _output_node_names = {"218"};
 
     if (!nhPrivate.getParam("mesh_rotation", _modelRPY) ||
         _modelRPY.size() != 3)

@@ -41,7 +41,8 @@ namespace yolo
         OnnxProcessor::init(nh, nhPrivate);
 
         nhPrivate.param("label", _label, kDefaultLabel);
-
+        _input_node_names = {"image"};
+        _output_node_names = {"grid"};
         return true;
     }
 
