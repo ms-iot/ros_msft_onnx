@@ -1,0 +1,24 @@
+name: Linux Build
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+defaults:
+  run:
+    shell: bash
+    
+jobs:
+  build_and_test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+          os: [ubuntu-20.04]
+    steps:
+    - uses: ros-tooling/setup-ros@0.0.26
+    - uses: ros-tooling/action-ros-ci@0.1.0
+      with:
+        package-name: onnx_object_detection
+        target-ros2-distro: foxy
+
