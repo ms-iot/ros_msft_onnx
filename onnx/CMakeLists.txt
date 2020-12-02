@@ -62,6 +62,7 @@ install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/models/tinyyolov2-8.onnx
   DESTINATION share/${PROJECT_NAME}/models)
 
+
 install(TARGETS
   ${PROJECT_NAME}
   DESTINATION lib/${PROJECT_NAME})
@@ -69,6 +70,11 @@ install(TARGETS
 install(DIRECTORY
   launch
   DESTINATION share/${PROJECT_NAME}/
+)
+
+install(DIRECTORY
+  data
+  DESTINATION share/${PROJECT_NAME}
 )
 
 install(DIRECTORY

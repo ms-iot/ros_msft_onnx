@@ -345,6 +345,10 @@ bool OnnxTracker::init(rclcpp::Node::SharedPtr& node)
     node->declare_parameter("image_topic");
     node->declare_parameter("visual_marker_topic");
     node->declare_parameter("image_debug_topic");
+    node->declare_parameter("model_bounds");
+    node->declare_parameter("mesh_scale");
+    node->declare_parameter("mesh_resource");
+    node->declare_parameter("mesh_rotation");
     
     // Parameters.
     std::string trackerType;

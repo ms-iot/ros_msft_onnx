@@ -13,15 +13,22 @@ from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
     share_dir = get_package_share_directory('ros_msft_onnx')
+    engine_path = os.path.join(share_dir,
+                             "data",
+                             "Engine_Block.stl")    
+
+    onnx_path = os.path.join(share_dir,
+                             "data",
+                             "engine.onnx")
 
     return launch.LaunchDescription([
         DeclareLaunchArgument(
             'onnx_model_path_arg', 
-            default_value="temp/path", # TODO: update default value 
+            default_value=onnx_path, # TODO: update default value 
             description="Onnx model path"),
         DeclareLaunchArgument(
             'model_bounds_arg', 
-            default_value="[-4.57, -10.50, -13.33, 5.54, -10.50, -13.33, 5.54, 0.00, -13.33, -4.57, 0.00, -13.33, -4.57, -10.50, 13.73, 5.54, -10.50, 13.73, 5.54, 0.00, 13.73, -4.57, 0.00, 13.73, 0.48, -5.25, 0.20]", 
+            default_value="", 
             description="Model bounds"),
         DeclareLaunchArgument(
             'tracker_type_arg', 
@@ -29,24 +36,27 @@ def generate_launch_description():
             description="Tracker type: choose between yolo or pose"),
         DeclareLaunchArgument(
             'mesh_resource_arg', 
-            default_value="temp/path", # TODO: update default value 
+            default_value=engine_path, # TODO: update default value 
             description="Mesh resource arg"),
         launch_ros.actions.Node(
             package='ros_msft_onnx', executable='ros_msft_onnx', output='screen',
             name=['ros_msft_onnx'],
             parameters=[
                 {'onnx_model_path': launch.substitutions.LaunchConfiguration('onnx_model_path_arg')},
-                {'model_bounds': launch.substitutions.LaunchConfiguration('model_bounds_arg')},
+                {'model_bounds': [-4.57, -10.50, -13.33, 5.54, -10.50, -13.33, 5.54, 0.00, -13.33, -4.57, 0.00, -13.33, -4.57, -10.50, 13.73, 5.54, -10.50, 13.73, 5.54, 0.00, 13.73, -4.57, 0.00, 13.73, 0.48, -5.25, 0.20]},
                 {'tracker_type': launch.substitutions.LaunchConfiguration('tracker_type_arg')},
                 {'mesh_resource': launch.substitutions.LaunchConfiguration('mesh_resource_arg')}, 
+                {'debug': True},
+                {'link_name': 'camera'},
                 {'tracker_type': 'pose'}
             ]),
         launch_ros.actions.Node(
-            package='cv_camera', executable='cv_camera_node', output='screen',
-            name=['cv_camera'],
+            package='win_camera', executable='win_camera_node', output='screen',
+            name=['win_camera'],
             parameters=[
-                {'rate': 5.0},
+                {'frame_rate': 5.0},
                 {'frame_id': 'camera'},
+                {'camera_info_url': 'package://win_camera/camera_info/camera.yaml'},
             ]),
         launch_ros.actions.Node(
             package='tf2_ros', executable='static_transform_publisher', output='screen',
