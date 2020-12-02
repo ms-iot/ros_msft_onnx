@@ -135,11 +135,8 @@ bool OnnxProcessor::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
     _cameraSub = it.subscribe(imageTopic.c_str(), 1, &OnnxProcessor::ProcessImage, this);
     _image_pub = it.advertise("tracked_objects/image", 1);
     
-    /*
-    TODO (lilustga): add a failure path here, there's none in Onnx but it would be useful.
     try
-    {*/
-
+    {
         //*************************************************************************
         // initialize  enviroment...one enviroment per process
         // enviroment maintains thread pools and other state info
@@ -160,19 +157,12 @@ bool OnnxProcessor::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
 
         _session = std::make_shared<Ort::Session>(*_env, modelFullPath, session_options);
         _allocator = std::make_shared<Ort::AllocatorWithDefaultOptions>();
-        /*
-    }
-    catch (hresult_error const& e)
-    {
-        ROS_ERROR("ONNX: Failed to Start ML Session!: %s", strFromHstring(e.message()).c_str());
-        return false;
     }
     catch (std::exception& e)
     {
         ROS_ERROR("ONNX: Failed to Start ML Session: %s", e.what());
         return false;
     }
-*/
     return true;
 }
 
