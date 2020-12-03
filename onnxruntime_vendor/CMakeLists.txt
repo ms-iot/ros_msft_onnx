@@ -1,10 +1,12 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 2.8.3)
 project(onnxruntime_vendor)
 
-find_package(ament_cmake REQUIRED)
+find_package(catkin)
+
+catkin_package()
 
 option(CUDA_SUPPORT "use CUDA support onnxruntime library" ON)
 
@@ -33,26 +35,26 @@ add_custom_target(ExtractOnnxruntime ALL
 
 install(
     DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/build/native/include/
-    DESTINATION include
+    DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
 
 install(
     FILES
         ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/runtimes/win-x64/native/onnxruntime.dll
         ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/runtimes/win-x64/native/onnxruntime.pdb
-    DESTINATION bin
+    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 install(
     FILES
         ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/runtimes/win-x64/native/onnxruntime.lib
-    DESTINATION lib
+    DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )
 
 install(
     FILES
         ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/runtimes/linux-x64/native/libonnxruntime.so
-    DESTINATION lib
+    DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
     RENAME libonnxruntime.so.1.4.0
 )
 
@@ -63,6 +65,13 @@ install(
     DESTINATION share/${PROJECT_NAME}
 )
 
-ament_package(
-  CONFIG_EXTRAS "src/onnxruntime_vendor-extras.cmake"
+#ament_package(
+#  CONFIG_EXTRAS "src/onnxruntime_vendor-extras.cmake"
+#)
+
+###################################
+## catkin specific configuration ##
+###################################
+catkin_package(
+    CFG_EXTRAS  "onnxruntime_vendor-extras.cmake"
 )

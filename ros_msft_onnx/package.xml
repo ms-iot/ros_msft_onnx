@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ros_msft_onnx</name>
+  <version>1.0.0</version>
+  <description>The ros_msft_onnx package</description>
+  <maintainer email="stscha@microsoft.com">Stuart Schaefer</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>eigen</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>visualization_msgs</depend>
+  <depend>ros_msft_onnx_msgs</depend>
+  <depend>cv_bridge</depend>
+  <depend>roscpp</depend>
+  <depend>tf</depend>
+  <depend>image_transport</depend>
+  <depend>onnxruntime_vendor</depend>
+
+  <test_depend>rosunit</test_depend>
+  <export>
+  </export>
+</package>
