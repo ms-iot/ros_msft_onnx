@@ -1,21 +1,10 @@
 # ONNX (Open Neural Network Exchange) ROS Node
 
-![](https://github.com/ms-iot/ros_msft_onnx/workflows/ros_msft_onnx%20CI/badge.svg)
-
-The AI platform in Windows 10 enables developers to use pre-trained machine learning models in their Apps on Windows devices. This offers developers a number of benefits:
-
-* Low latency, real-time results. Windows can perform AI evaluation tasks using the local processing capabilities of the PC, enabling real-time analysis of large local data such as images and video. Results can be delivered quickly and efficiently for use in performance intensive workloads like game engines, or background tasks such as indexing for search.
-
-* Reduced operational costs. Together with Microsoft’s Cloud AI platform, developers can build affordable, end-to-end AI solutions that combine training models in Azure with deployment to Windows devices for evaluation. Significant savings can be realized by reducing or eliminating costs associated with bandwidth due to ingestion of large data sets, such as camera footage or sensor telemetry. Complex workloads can be processed in real-time on the edge, with minimal sample data sent to the cloud for improved training on observations.
-
-* Flexibility. Developers can choose to perform AI tasks on device or in the cloud based on what their customers & scenarios need. AI processing can happen on the device if it becomes disconnected, or in scenarios where data cannot be sent to the cloud due to cost, size, policy or customer preference. 
-
 ## Consuming Onnx
 Requirements:
 
 * Install Visual Studio 2019 with UWP development
-* ROS melodic for Windows
-
+* ROS Noetic for Windows
 
 The Onnx ROS Node is distrubted as source. To consume it in your robot, clone the ros_msft_onnx sources into your workspace.
 
@@ -24,11 +13,17 @@ For example:
 ```Batchfile
 mkdir c:\workspace\onnx_demo\src
 cd c:\workspace\onnx_demo\src
-catkin_init_workspace
-git clone https://github.com/ms-iot/ros_msft_onnx
+git clone https://github.com/ms-iot/ros_msft_onnx -b noetic-devel
+
+#For running the samples, clone cv_camera as well
+git clone https://github.com/ms-iot/cv_camera
 ```
 
-Create a Launch file, which references the model.onnx file:
+There are two launch files included as samples in the launch folder. `tracker.launch` demonstrates tracking people in images/video and `pose.launch` demonstrates estimating the position and rotation of an engine block from images\video. To run the engine pose demo, copy the [Engine pose ONNX model](https://github.com/ms-iot/ros_msft_onnx_demo/releases/download/0.0/engine.onnx) to `ros_msft_onnx/testdata/`.
+
+To use hardware accelleration, install [CUDA Toolkit 10.1](https://developer.nvidia.com/cuda-10.1-download-archive-base) and [cuDNN v7 for CUDA 10.1](https://developer.nvidia.com/rdp/cudnn-archive). 
+
+For your own project, you can create a launch file in the following format:
 
 ```xml
 <launch>
@@ -58,7 +53,6 @@ Create a Launch file, which references the model.onnx file:
 ```
 
 > While 'Pose' processing is enabled, the service required to generate the model has not been published as of October 2020
- 
 
 ## Property Descriptions
 
@@ -78,6 +72,29 @@ Create a Launch file, which references the model.onnx file:
 | mesh_resource| The mesh used for debug rendering pose |
 | model_bounds| 9 coordinates used to perform the point in perspective caluclation for pose |
 | calibration | Path to the OpenCV calibration file for point in persective |
+
+## Building
+Make sure to source your ROS version before building. Then use catkin_make_isolated to build.
+```Batchfile
+cd c:\workspace\onnx_demo
+catkin_make_isolated
+```
+
+## Running the samples
+To run the samples, first source the workspace:
+```Batchfile
+install_isolated\setup.bat
+```
+
+Then, for the tracker sample run:
+```Batchfile
+roslaunch ros_msft_onnx tracker.launch
+```
+
+For the engine pose sample run:
+```Batchfile
+roslaunch ros_msft_onnx pose.launch
+```
 
 ## Subscriptions
 Onnx subscribes to the topic listed in the `image_topic` property, or `/cv_camera/image_raw`
