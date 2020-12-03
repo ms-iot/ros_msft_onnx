@@ -69,20 +69,3 @@ install(TARGETS ${PROJECT_NAME}_node
 install(DIRECTORY launch testdata ${CMAKE_CURRENT_BINARY_DIR}/testdata
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
-
-if(CATKIN_ENABLE_TESTING)
-  find_package(catkin REQUIRED COMPONENTS
-    std_msgs
-    geometry_msgs
-    visualization_msgs
-    ros_msft_onnx_msgs
-    image_transport
-    roscpp
-    cv_bridge
-    tf
-    onnxruntime_vendor
-    rostest
-  )
-  add_rostest_gtest(${PROJECT_NAME}_testnode test/testtracker.launch test/testtracker.cpp src/ros_msft_onnx.cpp src/yolo_box.cpp  src/pose_parser.cpp)
-  target_link_libraries(${PROJECT_NAME}_testnode ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} windowsapp)
-endif()
