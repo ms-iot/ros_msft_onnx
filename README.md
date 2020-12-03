@@ -15,8 +15,8 @@ mkdir c:\workspace\onnx_demo\src
 cd c:\workspace\onnx_demo\src
 git clone https://github.com/ms-iot/ros_msft_onnx -b noetic-devel
 
-#For running the samples, clone cv_camera as well
-git clone https://github.com/ms-iot/cv_camera
+::For running the samples, clone `ros_msft_camera` as well
+git clone https://github.com/ms-iot/ros_msft_camera --recursive
 ```
 
 There are two launch files included as samples in the launch folder. `tracker.launch` demonstrates tracking people in images/video and `pose.launch` demonstrates estimating the position and rotation of an engine block from images\video. To run the engine pose demo, copy the [Engine pose ONNX model](https://github.com/ms-iot/ros_msft_onnx_demo/releases/download/0.0/engine.onnx) to `ros_msft_onnx/testdata/`.
@@ -36,14 +36,16 @@ For your own project, you can create a launch file in the following format:
     <param name="tracker_type" value="yolo"/>
     <param name="image_processing" value="resize"/>
     <param name="debug" value="true"/>
-    <param name="image_topic" value="/cv_camera/image_raw" />
+    <param name="image_topic" value="/camera/image_raw" />
   </node>
   
   <!-- NOTE: The image properties need to be valid for the camera, or the node will auto select the closest values -->
-  <node pkg="cv_camera" type="cv_camera_node" name="cv_camera" output="screen">
-    <param name="rate" type="double" value="5.0"/>
-    <param name="image_width" type="double" value="640"/>
-    <param name="image_height" type="double" value="480"/>
+  <node pkg="ros_msft_camera" type="ros_msft_camera_node" name="camera">
+    <param name="camera_info_url" value="file://$(find ros_msft_camera)/config/default_calibration.yaml" />
+    <param name="frame_id" value="camera" />
+    <param name="image_width" value="1280" />
+    <param name="image_height" value="720" />
+    <param name="frame_rate" value="30.0" />
   </node>
 
   <node pkg="tf" type="static_transform_publisher" name="onnx_link"
@@ -97,7 +99,7 @@ roslaunch ros_msft_onnx pose.launch
 ```
 
 ## Subscriptions
-Onnx subscribes to the topic listed in the `image_topic` property, or `/cv_camera/image_raw`
+Onnx subscribes to the topic listed in the `image_topic` property, or `/camera/image_raw`
 
 ## Publishing
 Onnx Publishes the following topics:

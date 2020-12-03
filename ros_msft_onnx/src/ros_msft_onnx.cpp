@@ -126,7 +126,7 @@ bool OnnxProcessor::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
     if (!nhPrivate.getParam("image_topic", imageTopic) ||
         imageTopic.empty())
     {
-        imageTopic = "/cv_camera/image_raw";
+        imageTopic = "/camera/image_raw";
     }
 
     _detect_pub = nh.advertise<visualization_msgs::MarkerArray>("tracked_objects", 1);
