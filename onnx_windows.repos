@@ -1,0 +1,13 @@
+repositories:
+  image_transport_plugins:
+    type: git
+    url: https://github.com/ms-iot/image_transport_plugins.git
+    version: ros2
+  ros_msft_camera:
+    type: git
+    url: https://github.com/ms-iot/ros_msft_camera.git
+    version: foxy-devel
+  ros_msft_onnx:
+    type: git
+    url: https://github.com/ms-iot/ros_msft_onnx.git
+    version: master

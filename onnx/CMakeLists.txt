@@ -37,6 +37,7 @@ file(DOWNLOAD
 
 include_directories(
   include
+  ${EIGEN3_INCLUDE_DIR}
 )
 
 add_executable(${PROJECT_NAME}
@@ -58,12 +59,9 @@ ament_target_dependencies(${PROJECT_NAME}
   geometry_msgs)
 
 install(FILES
-  $<TARGET_FILE:onnxruntime-unofficial::onnxruntime>
-  DESTINATION lib/${PROJECT_NAME})
-
-install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/models/tinyyolov2-8.onnx
   DESTINATION share/${PROJECT_NAME}/models)
+
 
 install(TARGETS
   ${PROJECT_NAME}
@@ -72,6 +70,11 @@ install(TARGETS
 install(DIRECTORY
   launch
   DESTINATION share/${PROJECT_NAME}/
+)
+
+install(DIRECTORY
+  data
+  DESTINATION share/${PROJECT_NAME}
 )
 
 install(DIRECTORY

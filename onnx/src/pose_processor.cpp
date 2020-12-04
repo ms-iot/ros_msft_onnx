@@ -78,9 +78,10 @@ bool PoseProcessor::init(rclcpp::Node::SharedPtr& node)
 
     _node->get_parameter("mesh_resource", meshResource);
 
-    std::vector<double> points;
-    if (_node->get_parameter("model_bounds", points))
+    rclcpp::Parameter model_bounds_param;
+    if (_node->get_parameter("model_bounds", model_bounds_param))
     {
+        std::vector<double> points = model_bounds_param.as_double_array();
         if (points.size() < 9 * 3)
         {
             RCLCPP_ERROR(_node->get_logger(), "Model Bounds needs 9 3D floating points.");
@@ -388,6 +389,8 @@ void PoseProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
 
     // Always publish the resized image
     auto msg = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", image).toImageMsg();
+    msg->header.frame_id = _linkName;
+    msg->header.stamp = rclcpp::Time();
     image_pub_->publish(*msg);
 
 }

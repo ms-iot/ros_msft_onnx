@@ -21,8 +21,32 @@ ONNX Runtime team is releasing different binaries for CPU and GPU (CUDA) support
 
 * Default CPU
 
+### Windows
+
 ```Batchfile
 mkdir colcon_ws\src
+cd colcon_ws
+
+wget https://raw.githubusercontent.com/ms-iot/ros_msft_onnx/master/onnx_windows.repos
+vcs import src < onnx.repos
+colcon build --cmake-args -DCUDA_SUPPORT=OFF
+```
+
+* Default GPU (CUDA)
+
+```Batchfile
+mkdir colcon_ws\src
+cd colcon_ws
+
+wget https://raw.githubusercontent.com/ms-iot/ros_msft_onnx/master/onnx_windows.repos
+vcs import src < onnx.repos
+colcon build --cmake-args -DCUDA_SUPPORT=ON
+```
+
+### Ubuntu
+
+```Batchfile
+mkdir colcon_ws/src
 cd colcon_ws
 
 wget https://raw.githubusercontent.com/ms-iot/ros_msft_onnx/master/onnx.repos
@@ -33,7 +57,7 @@ colcon build --cmake-args -DCUDA_SUPPORT=OFF
 * Default GPU (CUDA)
 
 ```Batchfile
-mkdir colcon_ws\src
+mkdir colcon_ws/src
 cd colcon_ws
 
 wget https://raw.githubusercontent.com/ms-iot/ros_msft_onnx/master/onnx.repos
