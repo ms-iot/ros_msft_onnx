@@ -10,6 +10,10 @@
 *.userosscache
 *.sln.docstates
 
+onnx/data/Engine_Block.stl
+onnx/data/engine.onnx
+
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 

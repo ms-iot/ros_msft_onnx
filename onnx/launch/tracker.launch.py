@@ -6,20 +6,36 @@ import launch
 import launch.actions
 import launch.substitutions
 import launch_ros.actions
+from launch.actions import DeclareLaunchArgument
 
 from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
-    share_dir = get_package_share_directory('onnx_object_detection')
+    share_dir = get_package_share_directory('ros_msft_onnx')
     rviz_default_view = os.path.join(share_dir, 'rviz', 'default_view.rviz')
+    TinyYOLOv2ModelPath = os.path.join(
+        share_dir,
+        'models',
+        'tinyyolov2-8.onnx')
+
 
     return launch.LaunchDescription([
+        DeclareLaunchArgument(
+            'onnx_model_path_arg', 
+            default_value= TinyYOLOv2ModelPath,
+            description="Onnx model path"),
         launch_ros.actions.Node(
-            package='onnx_object_detection', executable='object_detection', output='screen',
-            name=['object_detection'],
+            package='ros_msft_onnx', executable='ros_msft_onnx', output='screen',
+            name=['ros_msft_onnx'],
             parameters=[
-                {'frame_id': 'camera'},
+                {'onnx_model_path': launch.substitutions.LaunchConfiguration('onnx_model_path_arg')},
+                {'link_name': 'camera'},
+                {'confidence': 0.5},
+                {'tensor_width': 416},
+                {'tensor_height': 416},
+                {'tracker_type': 'yolo'},
+                {'debug': True}
             ]),
         launch_ros.actions.Node(
             package='cv_camera', executable='cv_camera_node', output='screen',

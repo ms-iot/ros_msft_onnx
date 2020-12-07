@@ -3,7 +3,7 @@
 
 cmake_minimum_required(VERSION 3.5)
 
-project(onnx_object_detection)
+project(ros_msft_onnx)
 
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
@@ -22,6 +22,11 @@ find_package(sensor_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(onnxruntime_vendor REQUIRED)
+find_package(ros_msft_onnx_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(OpenCV REQUIRED)
 
 # The node expects to use the Tiny YOLO model available in the ONNX model zoo.
 file(DOWNLOAD
@@ -32,32 +37,44 @@ file(DOWNLOAD
 
 include_directories(
   include
+  ${EIGEN3_INCLUDE_DIR}
 )
 
-add_executable(object_detection
+add_executable(${PROJECT_NAME}
   src/main.cpp
-  src/yolo_processor.cpp)
+  src/onnx_tracker.cpp
+  src/yolo_processor.cpp
+  src/pose_processor.cpp)
 
-ament_target_dependencies(object_detection
+ament_target_dependencies(${PROJECT_NAME}
   ament_index_cpp
   rclcpp
   std_msgs
   sensor_msgs
   visualization_msgs
   cv_bridge
-  onnxruntime_vendor)
+  onnxruntime_vendor
+  ros_msft_onnx_msgs
+  tf2
+  geometry_msgs)
 
 install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/models/tinyyolov2-8.onnx
   DESTINATION share/${PROJECT_NAME}/models)
 
+
 install(TARGETS
-  object_detection
+  ${PROJECT_NAME}
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY
   launch
   DESTINATION share/${PROJECT_NAME}/
+)
+
+install(DIRECTORY
+  data
+  DESTINATION share/${PROJECT_NAME}
 )
 
 install(DIRECTORY

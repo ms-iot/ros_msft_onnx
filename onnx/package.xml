@@ -3,7 +3,7 @@
   href="http://download.ros.org/schema/package_format2.xsd"
   schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
-  <name>onnx_object_detection</name>
+  <name>ros_msft_onnx</name>
   <version>0.0.1</version>
   <description>
     TinyYOLOv2 Object Detection
@@ -13,6 +13,8 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <depend>eigen</depend>
+  <depend>geometry_msgs</depend>
   <depend>ament_index_cpp</depend>
   <depend>onnxruntime_vendor</depend>
   <depend>rclcpp</depend>
@@ -20,6 +22,8 @@
   <depend>sensor_msgs</depend>
   <depend>visualization_msgs</depend>
   <depend>cv_bridge</depend>
+  <depend>tf2</depend>
+  <depend>ros_msft_onnx_msgs</depend>
 
   <export>
     <build_type>ament_cmake</build_type>
