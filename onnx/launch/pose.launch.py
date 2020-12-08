@@ -7,6 +7,8 @@ import launch.actions
 import launch.substitutions
 import launch_ros.actions
 from launch.actions import DeclareLaunchArgument
+from launch import conditions
+import platform 
 
 from ament_index_python.packages import get_package_share_directory
 
@@ -21,10 +23,13 @@ def generate_launch_description():
                              "data",
                              "engine.onnx")
 
+    os_name = platform.system()
+    os_flag = "false" if os_name == 'Windows' else "true" # default to Linux
+
     return launch.LaunchDescription([
         DeclareLaunchArgument(
             'onnx_model_path_arg', 
-            default_value=onnx_path, # TODO: update default value 
+            default_value=onnx_path, 
             description="Onnx model path"),
         DeclareLaunchArgument(
             'model_bounds_arg', 
@@ -36,7 +41,7 @@ def generate_launch_description():
             description="Tracker type: choose between yolo or pose"),
         DeclareLaunchArgument(
             'mesh_resource_arg', 
-            default_value=engine_path, # TODO: update default value 
+            default_value=engine_path,
             description="Mesh resource arg"),
         launch_ros.actions.Node(
             package='ros_msft_onnx', executable='ros_msft_onnx', output='screen',
@@ -51,13 +56,22 @@ def generate_launch_description():
                 {'tracker_type': 'pose'}
             ]),
         launch_ros.actions.Node(
+            package='cv_camera', executable='cv_camera_node', output='screen',
+            name=['cv_camera'],
+            parameters=[
+                {'rate': 5.0},
+                {'frame_id': 'camera'},
+            ], 
+            condition=conditions.IfCondition(os_flag)),
+        launch_ros.actions.Node(
             package='win_camera', executable='win_camera_node', output='screen',
             name=['win_camera'],
             parameters=[
                 {'frame_rate': 5.0},
                 {'frame_id': 'camera'},
                 {'camera_info_url': 'package://win_camera/camera_info/camera.yaml'},
-            ]),
+            ], 
+            condition=conditions.UnlessCondition(os_flag)),
         launch_ros.actions.Node(
             package='tf2_ros', executable='static_transform_publisher', output='screen',
             name=['static_transform_publisher'],
