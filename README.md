@@ -140,6 +140,29 @@ For your own project, you can create a launch file in the following format:
 | model_bounds| 9 coordinates used to perform the point in perspective caluclation for pose |
 | calibration | Path to the OpenCV calibration file for point in persective |
 
+## Building
+Make sure to source your ROS version before building. Then use catkin_make to build.
+```Batchfile
+cd c:\workspace\src
+catkin_make
+```
+
+## Running the samples
+To run the samples, first source the workspace:
+```Batchfile
+cd c:\workspace\devel\setup.bat
+```
+
+Then, for the tracker sample run:
+```Batchfile
+roslaunch ros_msft_onnx tracker.launch
+```
+
+For the engine pose sample run:
+```Batchfile
+roslaunch ros_msft_onnx pose.launch
+```
+
 ## Subscriptions
 Onnx subscribes to the topic listed in the `image_topic` property, or `/camera/image_raw`
 
