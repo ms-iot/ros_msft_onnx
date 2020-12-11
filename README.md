@@ -76,16 +76,16 @@ For your own project, you can create a launch file in the following format:
 | calibration | Path to the OpenCV calibration file for point in persective |
 
 ## Building
-Make sure to source your ROS version before building. Then use catkin_make_isolated to build.
+Make sure to source your ROS version before building. Then use catkin_make to build.
 ```Batchfile
-cd c:\workspace\onnx_demo
-catkin_make_isolated
+cd c:\workspace\src
+catkin_make
 ```
 
 ## Running the samples
 To run the samples, first source the workspace:
 ```Batchfile
-install_isolated\setup.bat
+cd c:\workspace\devel\setup.bat
 ```
 
 Then, for the tracker sample run:
