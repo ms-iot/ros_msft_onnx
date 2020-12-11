@@ -1,6 +1,5 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.5)
 project(ros_msft_onnx)
-#set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_BUILD_TYPE Relwithdebinfo)
 
 if(NOT CMAKE_CXX_STANDARD)
@@ -54,39 +53,41 @@ target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIE
 message("Installing onnxruntime_vendor Nuget package")
 
 if(CUDA_SUPPORT)
-  set(PACKAGES_CONFIG "packages.gpu.config")
   set(ONNX_RUNTIME "Microsoft.ML.OnnxRuntime.Gpu.1.4.0")
+  set(PACKAGE_URL "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.Gpu/1.4.0")
+  set(PACKAGE_SHA512 "c9c2ba5c594c92c1e426e9c53f9909e8851a41c99f48f8a369e082f8047d521b236f2fbb943e73975cbb45bd9957f20139c25959e50e1679dca9eeac08f73b31")
 else()
-  set(PACKAGES_CONFIG "packages.cpu.config")
   set(ONNX_RUNTIME "Microsoft.ML.OnnxRuntime.1.4.0")
+  set(PACKAGE_URL "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime/1.4.0")
+  set(PACKAGE_SHA512 "cbff106bb1f114ee1d510b594abb487e9f965b7b7a3f37b92846013eb086126a4cd69eb4564717fe1acf04d4399d1fcd0a52c3ca508f330e91a3e5d0fe560ca3")
 endif()
+
+file(DOWNLOAD
+    ${PACKAGE_URL}
+    ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime.nuget
+    EXPECTED_HASH SHA512=${PACKAGE_SHA512}
+    SHOW_PROGRESS
+)
+
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}")
 
 if(MSVC)
   set(ARCH "win-x64" )
-  find_program(NUGET nuget PATHS C:\\opt\\ros\\noetic\\x64\\bin)
-
-  if(NOT NUGET)
-    message(FATAL "CMake could not find the nuget command line tool. Please install it from nuget.org")
-  else()
-    execute_process(COMMAND ${NUGET} restore ${CMAKE_CURRENT_SOURCE_DIR}/src/${PACKAGES_CONFIG} -PackagesDirectory ${CMAKE_CURRENT_BINARY_DIR})
-  endif()
+  execute_process(COMMAND tar xvzf "${CMAKE_CURRENT_BINARY_DIR}/onnxruntime.nuget" 
+               WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}"
+               )
 
 else()
   set(ARCH "linux-x64")
-  find_program(MONO mono PATHS /usr/bin)
-  if(NOT MONO)
-    message(FATAL "CMake could not find mono which is required for running nuget command line tool. Please follow the instruction from https://docs.microsoft.com/en-us/nuget/install-nuget-client-tools")
-  else()
-    execute_process(COMMAND ${MONO} /usr/local/bin/nuget.exe restore ${CMAKE_CURRENT_SOURCE_DIR}/src/${PACKAGES_CONFIG} -PackagesDirectory ${CMAKE_CURRENT_BINARY_DIR})
-  endif()
-endif()
+  execute_process(COMMAND unzip "${CMAKE_CURRENT_BINARY_DIR}/onnxruntime.nuget" 
+               WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}"
+               )
 
+endif()
 
 include_directories(
   ${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}/build/native/include/
 )
-
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/${PACKAGES_CONFIG} ${CMAKE_CURRENT_BINARY_DIR}/${PACKAGES_CONFIG} COPYONLY)
 
 if(MSVC)
   target_link_libraries(${PROJECT_NAME}_node ${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}/runtimes/${ARCH}/native/onnxruntime.lib)
