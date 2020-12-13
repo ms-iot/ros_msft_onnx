@@ -95,8 +95,8 @@ if(MSVC)
   configure_file(${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}/runtimes/${ARCH}/native/onnxruntime.lib ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/onnxruntime.lib COPYONLY)
   configure_file(${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}/runtimes/${ARCH}/native/onnxruntime.pdb ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/onnxruntime.pdb COPYONLY)
 else()
-  target_link_libraries(${PROJECT_NAME}_node ${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}/runtimes/${ARCH}/native/libonnxruntime.so)
-  configure_file(${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}/runtimes/${ARCH}/native/libonnxruntime.so ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/libonnxruntime.so COPYONLY)
+  configure_file(${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}/runtimes/${ARCH}/native/libonnxruntime.so ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${PROJECT_NAME}/libonnxruntime.so.1.4.0 COPYONLY)
+  target_link_libraries(${PROJECT_NAME}_node ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${PROJECT_NAME}/libonnxruntime.so.1.4.0)
 endif()
 
 # The node expects to use the Tiny YOLO model available in the ONNX model zoo.
