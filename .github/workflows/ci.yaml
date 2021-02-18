@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - master
+  schedule:
+    # every Monday
+    - cron:  '0 0 * * 1'
 defaults:
   run:
     shell: bash
@@ -17,7 +20,7 @@ jobs:
           os: [ubuntu-20.04]
     steps:
     - uses: ros-tooling/setup-ros@0.0.26
-    - uses: ros-tooling/action-ros-ci@0.1.0
+    - uses: ros-tooling/action-ros-ci@0.1.1
       with:
         package-name: ros_msft_onnx
         target-ros2-distro: foxy
