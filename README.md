@@ -67,7 +67,7 @@ colcon build --cmake-args -DCUDA_SUPPORT=ON
 
 ## Samples Lists
 
-  * [Object Detection with Tiny-YOLOv2/ONNX Runtime](./onnx_object_detection/README.md)
+  * [Object Detection with Tiny-YOLOv2/ONNX Runtime](./onnx/README.md)
 
 # Contributing
 
