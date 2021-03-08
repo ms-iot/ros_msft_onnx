@@ -298,7 +298,7 @@ bool OnnxTracker::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
     std::string trackerType;
     if (nhPrivate.getParam("tracker_type", trackerType))
     {
-        if (trackerType == "yolo")
+        if (trackerType == "yolo" || trackerType == "customvision")
         {
             _processor = std::make_shared<yolo::YoloProcessor>();
         }

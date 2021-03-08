@@ -1,7 +1,9 @@
 <launch>
   <arg name="onnx_model_path_arg" default="$(find ros_msft_onnx)/testdata/model.onnx"/>
+  <!-- <arg name="label_file_path_arg" default="$(find ros_msft_onnx)/testdata/onnx_model/labels.txt"/> -->
   <node pkg="ros_msft_onnx" type="ros_msft_onnx_node" name="ros_msft_onnx" output="screen">
     <param name="onnx_model_path" value="$(arg onnx_model_path_arg)"/>
+    <!-- <param name="label_file_path" value="$(arg label_file_path_arg)"/> -->
     <param name="confidence" value="0.5"/>
     <param name="tensor_width" value="416"/>
     <param name="tensor_height" value="416"/>
