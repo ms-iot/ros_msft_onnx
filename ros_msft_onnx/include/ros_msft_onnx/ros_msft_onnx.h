@@ -53,37 +53,6 @@ protected:
     image_transport::Publisher _image_pub;
     image_transport::Publisher _debug_image_pub;
     image_transport::Subscriber _cameraSub;
-/* TODO (lilustga): remove this
-    bool _fake;
-    winrt::hstring _inName;
-    winrt::hstring _outName;
-    std::string frame_id_;
-    std::string _onnxModel;
-    std::string _calibration;
-
-    cv::Mat _camera_matrix;
-    cv::Mat _dist_coeffs;
-
-    
-    float _confidence;
-
-    bool _debug;
-    bool _normalize;
-
-    uint _tensorWidth;
-    uint _tensorHeight;
-
-    int _channelCount;
-    int _rowCount;
-    int _colCount;
-    winrt::Windows::AI::MachineLearning::LearningModel _model = nullptr;
-    winrt::Windows::AI::MachineLearning::LearningModelSession _session = nullptr;
-
-    ros::Publisher _detect_pub;
-    image_transport::Publisher _image_pub;
-    image_transport::Publisher _debug_image_pub;
-    image_transport::Subscriber _cameraSub;
-*/
 
 };
 

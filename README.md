@@ -88,17 +88,19 @@ To run the engine pose detection demo, source the workspace and then roslaunch t
 roslaunch ros_msft_onnx pose.launch
 ```
 
-For your own project, you can create a launch file in the following format:
+For a project trained using customvision.ai, you can replace the tracker_type to "customvision", place the relevant extracted onnx zip folder to the `ros_msft_onnx/testdata/` folder and edit the launch file in the following format:
 
 ```xml
 <launch>
   <arg name="onnx_model_path_arg" default="$(find ros_msft_onnx)/testdata/model.onnx"/>
+  <arg name="label_file_path_arg" default="$(find ros_msft_onnx)/testdata/onnx_model/labels.txt"/>
   <node pkg="ros_msft_onnx" type="ros_msft_onnx_node" name="ros_msft_onnx" output="screen">
     <param name="onnx_model_path" value="$(arg onnx_model_path_arg)"/>
+    <param name="label_file_path" value="$(arg label_file_path_arg)"/>
     <param name="confidence" value="0.5"/>
     <param name="tensor_width" value="416"/>
     <param name="tensor_height" value="416"/>
-    <param name="tracker_type" value="yolo"/>
+    <param name="tracker_type" value="customvision"/>
     <param name="image_processing" value="resize"/>
     <param name="debug" value="true"/>
     <param name="image_topic" value="/camera/image_raw" />
