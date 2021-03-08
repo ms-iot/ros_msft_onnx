@@ -92,7 +92,7 @@ For a project trained using customvision.ai, you can replace the tracker_type to
 
 ```xml
 <launch>
-  <arg name="onnx_model_path_arg" default="$(find ros_msft_onnx)/testdata/model.onnx"/>
+  <arg name="onnx_model_path_arg" default="$(find ros_msft_onnx)/testdata/onnx_model/model.onnx"/>
   <arg name="label_file_path_arg" default="$(find ros_msft_onnx)/testdata/onnx_model/labels.txt"/>
   <node pkg="ros_msft_onnx" type="ros_msft_onnx_node" name="ros_msft_onnx" output="screen">
     <param name="onnx_model_path" value="$(arg onnx_model_path_arg)"/>
