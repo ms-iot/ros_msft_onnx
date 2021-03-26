@@ -41,18 +41,18 @@ OnnxProcessor::OnnxProcessor()
 
 bool OnnxProcessor::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
 {
-    std::string imageProcessingType;
-    if (nhPrivate.getParam("image_processing", imageProcessingType))
+    
+    if (nhPrivate.getParam("image_processing", _imageProcessingType))
     {
-        if (imageProcessingType == "crop")
+        if (_imageProcessingType == "crop")
         {
             _process = Crop;
         }
-        else if (imageProcessingType == "scale")
+        else if (_imageProcessingType == "scale")
         {
             _process = Scale;
         }
-        else if (imageProcessingType == "resize")
+        else if (_imageProcessingType == "resize")
         {
             _process = Resize;
         }
@@ -294,11 +294,55 @@ bool OnnxTracker::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
     _nh = nh;
     _nhPrivate = nhPrivate;
 
+    f = boost::bind(&OnnxTracker::callback, this, _1, _2);
+    server.setCallback(f);
+
+    return _status;    
+
+}
+
+void OnnxTracker::callback(ros_msft_onnx::reconfigConfig &config, uint32_t level) {
+  ROS_INFO("Reconfigure Request: %d %d %f %s %s %s %s %s %s %s \n", 
+            config.tensor_height, config.tensor_width, config.confidence, config.onnx_model_path.c_str(),config.onnx_label_path.c_str(),
+            config.tracker_type.c_str(), config.image_processing.c_str(), config.input_node_name.c_str(), config.output_node_name.c_str(),
+            config.debug?"True":"False");
+  ROS_INFO("Reconfigure Request: %f %f %f %f %f %f %f %f %f %f \n",
+           config.anch0, config.anch1, config.anch2, config.anch3,
+           config.anch4, config.anch5, config.anch6, config.anch7, config.anch8,
+           config.anch9);
+
+  stopProcessor();
+  startProcessor(config);
+
+}
+
+void OnnxTracker::startProcessor(ros_msft_onnx::reconfigConfig &config){
+
     // Parameters.
+    _nhPrivate.setParam("tensor_height",config.tensor_height);
+    _nhPrivate.setParam("tensor_width",config.tensor_width);
+    _nhPrivate.setParam("confidence", config.confidence);
+    _nhPrivate.setParam("onnx_model_path", config.onnx_model_path);
+    _nhPrivate.setParam("onnx_label_path", config.onnx_label_path);
+    _nhPrivate.setParam("tracker_type", config.tracker_type);
+    _nhPrivate.setParam("image_processing", config.image_processing);
+    _nhPrivate.setParam("input_node_name", config.input_node_name);
+    _nhPrivate.setParam("output_node_name", config.output_node_name);
+    _nhPrivate.setParam("debug", config.debug);
+    _nhPrivate.setParam("anch0", config.anch0);
+    _nhPrivate.setParam("anch1", config.anch1);
+    _nhPrivate.setParam("anch2", config.anch2);
+    _nhPrivate.setParam("anch3", config.anch3);
+    _nhPrivate.setParam("anch4", config.anch4);
+    _nhPrivate.setParam("anch5", config.anch5);
+    _nhPrivate.setParam("anch6", config.anch6);
+    _nhPrivate.setParam("anch7", config.anch7);
+    _nhPrivate.setParam("anch8", config.anch8);
+    _nhPrivate.setParam("anch9", config.anch9);
     std::string trackerType;
-    if (nhPrivate.getParam("tracker_type", trackerType))
+    if (_nhPrivate.getParam("tracker_type", trackerType))
     {
-        if (trackerType == "yolo" || trackerType == "customvision")
+        if (trackerType == "yolo")
         {
             _processor = std::make_shared<yolo::YoloProcessor>();
         }
@@ -314,13 +358,36 @@ bool OnnxTracker::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
         _processor = std::make_shared<yolo::YoloProcessor>();
     }
 
-    return _processor->init(_nh, nhPrivate);
+    _status = _processor->init(_nh, _nhPrivate);
 }
+
+void::OnnxTracker::stopProcessor(){
+    _nhPrivate.deleteParam("tensor_height");
+    _nhPrivate.deleteParam("tensor_width");
+    _nhPrivate.deleteParam("confidence");
+    _nhPrivate.deleteParam("onnx_model_path");
+    _nhPrivate.deleteParam("onnx_label_path");
+    _nhPrivate.deleteParam("tracker_type");
+    _nhPrivate.deleteParam("image_processing");
+    _nhPrivate.deleteParam("input_node_name");
+    _nhPrivate.deleteParam("output_node_name");
+    _nhPrivate.deleteParam("debug");
+    _nhPrivate.deleteParam("anch0");
+    _nhPrivate.deleteParam("anch1");
+    _nhPrivate.deleteParam("anch2");
+    _nhPrivate.deleteParam("anch3");
+    _nhPrivate.deleteParam("anch4");
+    _nhPrivate.deleteParam("anch5");
+    _nhPrivate.deleteParam("anch6");
+    _nhPrivate.deleteParam("anch7");
+    _nhPrivate.deleteParam("anch8");
+    _nhPrivate.deleteParam("anch9");
+}
+
 
 bool OnnxTracker::shutdown()
 {
     _nh.shutdown();
     _nhPrivate.shutdown();
-
     return true;
 }
