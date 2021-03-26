@@ -19,63 +19,39 @@ git clone https://github.com/ms-iot/ros_msft_onnx -b noetic-devel
 git clone https://github.com/ms-iot/ros_msft_camera --recursive
 ```
 
-There are two launch files included as samples in the launch folder. `tracker.launch` demonstrates tracking people in images/video and `pose.launch` demonstrates estimating the position and rotation of an engine block from images\video. To run the engine pose demo, copy the [Engine pose ONNX model](https://github.com/ms-iot/ros_msft_onnx_demo/releases/download/0.0/engine.onnx) to `ros_msft_onnx/testdata/`.
+There are two launch files included as samples in the launch folder. `tracker.launch` demonstrates tracking upto 20 classes icluding people in images/video and `pose.launch` demonstrates estimating the position and rotation of an engine block from images\video. To run the engine pose demo, copy the [Engine pose ONNX model](https://github.com/ms-iot/ros_msft_onnx_demo/releases/download/0.0/engine.onnx) to `ros_msft_onnx/testdata/`.
 
 To use hardware accelleration, install [CUDA Toolkit 10.1](https://developer.nvidia.com/cuda-10.1-download-archive-base) and [cuDNN v7 for CUDA 10.1](https://developer.nvidia.com/rdp/cudnn-archive). 
 
-For a project trained using customvision.ai, you can replace the tracker_type to "customvision", place the relevant extracted onnx zip folder to the `ros_msft_onnx/testdata/` folder and edit the launch file in the following format:
+For a project trained using customvision.ai at runtime you can change the parameters using rqt_reconfigure.
 
-```xml
-<launch>
-  <arg name="onnx_model_path_arg" default="$(find ros_msft_onnx)/testdata/onnx_model/model.onnx"/>
-  <arg name="label_file_path_arg" default="$(find ros_msft_onnx)/testdata/onnx_model/labels.txt"/>
-  <node pkg="ros_msft_onnx" type="ros_msft_onnx_node" name="ros_msft_onnx" output="screen">
-    <param name="onnx_model_path" value="$(arg onnx_model_path_arg)"/>
-    <param name="label_file_path" value="$(arg label_file_path_arg)"/>
-    <param name="confidence" value="0.5"/>
-    <param name="tensor_width" value="416"/>
-    <param name="tensor_height" value="416"/>
-    <param name="tracker_type" value="customvision"/>
-    <param name="image_processing" value="resize"/>
-    <param name="debug" value="true"/>
-    <param name="image_topic" value="/camera/image_raw" />
-  </node>
-  
-  <!-- NOTE: The image properties need to be valid for the camera, or the node will auto select the closest values -->
-  <node pkg="ros_msft_camera" type="ros_msft_camera_node" name="camera">
-    <param name="camera_info_url" value="file://$(find ros_msft_camera)/config/default_calibration.yaml" />
-    <param name="frame_id" value="camera" />
-    <param name="image_width" value="1280" />
-    <param name="image_height" value="720" />
-    <param name="frame_rate" value="30.0" />
-  </node>
-
-  <node pkg="tf" type="static_transform_publisher" name="onnx_link"
-    args="0 -0.02  0 0 0 0 map base_link 100" />  
-
-</launch>
+```Batchfile
+rosrun rqt_reconfigure rqt_reconfigure
 ```
+Place the relevant extracted onnx zip folder downloaded from customvision.ai to `ros_msft_onnx/testdata/` or a known location. Change the anchor values anch0, anch1,...., anch9 from the default values to 0.573, 0.677, 1.87, 2.06, 3.34, 5.47, 7.88, 3.53, 9.77, 9.17 and update any other relevant parameters below:
+
+![Rqt Reconfigure](./ros_msft_onnx/testdata/rqt_reconfigure.PNG)
 
 > While 'Pose' processing is enabled, the service required to generate the model has not been published as of October 2020
 
 ## Property Descriptions
 
-| Property | Description |
-|----------| ------------|
-| onnx_model_path | Path to the model.onnx file | 
-| confidence | Minimum confidence before publishing an event. 0 to 1 |
-| tensor_width| The Width of the input to the model. |
-| tensor_height| The Height of the input to the model. |
-| tracker_type| Currently enabled - `yolo` or `pose`. |
-| image_processing| `resize`, `scale` or `crop` |
-| debug| `true` or `false` determines if a debug image is published |
-| image_topic| The image topic to subscribe to |
-| label | used to filter the found object to a specific label |
-| mesh_rotation| The orientation of the mesh when debug rendering pose |
-| mesh_scale| The scale of the mesh when debug rendering pose |
-| mesh_resource| The mesh used for debug rendering pose |
-| model_bounds| 9 coordinates used to perform the point in perspective caluclation for pose |
-| calibration | Path to the OpenCV calibration file for point in persective |
+| Property         | Description                                                                 |
+| ---------------- | --------------------------------------------------------------------------- |
+| onnx_model_path  | Path to the model.onnx file                                                 |
+| confidence       | Minimum confidence before publishing an event. 0 to 1                       |
+| tensor_width     | The Width of the input to the model.                                        |
+| tensor_height    | The Height of the input to the model.                                       |
+| tracker_type     | Currently enabled - `yolo` or `pose`.                                       |
+| image_processing | `resize`, `scale` or `crop`                                                 |
+| debug            | `true` or `false` determines if a debug image is published                  |
+| image_topic      | The image topic to subscribe to                                             |
+| label            | used to filter the found object to a specific label                         |
+| mesh_rotation    | The orientation of the mesh when debug rendering pose                       |
+| mesh_scale       | The scale of the mesh when debug rendering pose                             |
+| mesh_resource    | The mesh used for debug rendering pose                                      |
+| model_bounds     | 9 coordinates used to perform the point in perspective caluclation for pose |
+| calibration      | Path to the OpenCV calibration file for point in persective                 |
 
 ## Building
 Make sure to source your ROS version before building. Then use catkin_make to build.
@@ -87,7 +63,8 @@ catkin_make
 ## Running the samples
 To run the samples, first source the workspace:
 ```Batchfile
-cd c:\workspace\devel\setup.bat
+cd c:\workspace\devel\
+setup.bat
 ```
 
 Then, for the tracker sample run:

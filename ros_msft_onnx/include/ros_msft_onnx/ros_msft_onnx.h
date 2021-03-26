@@ -1,7 +1,8 @@
 #pragma once
 
 #include <onnxruntime_cxx_api.h>
-
+#include <dynamic_reconfigure/server.h>
+#include <ros_msft_onnx/reconfigConfig.h>
 class OnnxProcessor
 {
 public:
@@ -39,6 +40,8 @@ protected:
 
     std::string _linkName;
     std::string _onnxModel;
+
+    std::string _imageProcessingType;
     std::string _calibration;
 
     cv::Mat _camera_matrix;
@@ -48,6 +51,7 @@ protected:
 
     bool _debug;
     bool _normalize;
+
 
     ros::Publisher _detect_pub;
     image_transport::Publisher _image_pub;
@@ -60,6 +64,9 @@ class OnnxTracker
 {
     ros::NodeHandle _nh;
     ros::NodeHandle _nhPrivate;
+    dynamic_reconfigure::Server<ros_msft_onnx::reconfigConfig> server;
+    dynamic_reconfigure::Server<ros_msft_onnx::reconfigConfig>::CallbackType f;
+    bool _status;
 
     std::shared_ptr<OnnxProcessor> _processor;
 
@@ -67,6 +74,9 @@ public:
     OnnxTracker() { };
 
     bool init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate);
+    void callback(ros_msft_onnx::reconfigConfig &config, uint32_t level);
+    void startProcessor(ros_msft_onnx::reconfigConfig &config); 
+    void stopProcessor(); 
     bool shutdown();
 };
 

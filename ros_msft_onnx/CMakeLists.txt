@@ -29,14 +29,19 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
   ros_msft_onnx_msgs
   image_transport
+  dynamic_reconfigure
   roscpp
   cv_bridge
   tf
 )
 
+generate_dynamic_reconfigure_options(
+  cfg/reconfig.cfg
+)
+
 catkin_package(
   INCLUDE_DIRS include
-  CATKIN_DEPENDS std_msgs geometry_msgs visualization_msgs ros_msft_onnx_msgs image_transport roscpp cv_bridge tf
+  CATKIN_DEPENDS std_msgs geometry_msgs visualization_msgs ros_msft_onnx_msgs image_transport dynamic_reconfigure roscpp cv_bridge tf
   CFG_EXTRAS  "onnxruntime_vendor-extras.cmake"
 )
 
@@ -47,7 +52,7 @@ include_directories(
 )
 
 add_executable(${PROJECT_NAME}_node src/ros_msft_onnx.cpp src/main.cpp src/yolo_box.cpp src/pose_parser.cpp)
-add_dependencies(${PROJECT_NAME}_node ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME}_gencfg ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${EIGEN3_LIBS})
 
 message("Installing onnxruntime_vendor Nuget package")

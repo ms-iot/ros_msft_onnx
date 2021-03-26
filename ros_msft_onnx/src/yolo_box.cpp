@@ -21,7 +21,6 @@ namespace yolo
     const int TENSOR_WIDTH = 416;
     const int TENSOR_HEIGHT = 416;
     const std::string TRACKER_TYPE = "yolo";
-    const std::string kDefaultLabel = "person";
 
     YoloProcessor::YoloProcessor()
     {
@@ -31,44 +30,37 @@ namespace yolo
     bool YoloProcessor::init(ros::NodeHandle &nh, ros::NodeHandle &nhPrivate)
     {
         OnnxProcessor::init(nh, nhPrivate);
-        nhPrivate.param("tracker_type", _trackerType, TRACKER_TYPE);
-        if (_trackerType == "yolo")
+        
+        nhPrivate.getParam("onnx_label_path", _labelPath);
+        
+        nhPrivate.getParam("input_node_name", _inputName);
+        nhPrivate.getParam("output_node_name", _outputName);
+        std::ifstream file(_labelPath);
+        std::string line;
+        _input_node_names = {_inputName.c_str()};
+        _output_node_names = {_outputName.c_str()};
+        if (file.is_open())
         {
-            _input_node_names = {"image"};
-            _output_node_names = {"grid"};
-            nhPrivate.param("label", _label, kDefaultLabel);
+            while (std::getline(file, line))
+            {
+                _labels.push_back(line);
+            }
+            file.close();
         }
-        if (_trackerType == "customvision")
-        {
-            _anchors.clear();
-            _anchors = {
-                0.573f, 0.677f, 1.87f, 2.06f, 3.34f, 5.47f, 7.88f, 3.53f, 9.77f, 9.17f};
-            nhPrivate.getParam("label_file_path", _label_file_path);
-            std::ifstream file(_label_file_path);
-            std::string line;
-            _labels.clear();
-            _input_node_names = {"data"};
-            _output_node_names = {"model_outputs0"};
-            if (file.is_open())
-            {
-                while (std::getline(file, line))
-                {
-                    _labels.push_back(line);
-                }
-                file.close();
-            }
 
-            else
-            {
-                ROS_ERROR("Unable to open the file containing labels");
-                return false;
-            }
+        else
+        {
+            ROS_ERROR("Unable to open the file containing labels, please select the correct file.");
         }
         _class_count = _labels.size();
-        nhPrivate.param("tensor_width", _tensor_width, TENSOR_WIDTH);
-        nhPrivate.param("tensor_width", _tensor_height, TENSOR_HEIGHT);
-        _col_count = std::round(_tensor_width / CELL_WIDTH);
-        _row_count = std::round(_tensor_height / CELL_HEIGHT);
+        _col_count = std::round(_tensorWidth / CELL_WIDTH);
+        _row_count = std::round(_tensorHeight / CELL_HEIGHT);
+        _anchors.clear();
+        for (int i = 0; i< 10; i++){
+        float temp;
+        nhPrivate.getParam("anch"+ std::to_string(i),temp);
+        _anchors.push_back(temp);
+        }
 
         return true;
     }
