@@ -5,10 +5,6 @@
 #include <visualization_msgs/MarkerArray.h>
 
 #include "ros_msft_onnx/ros_msft_onnx.h"
-#include <dynamic_reconfigure/server.h>
-#include <ros_msft_onnx/reconfigConfig.h>
-
-#include "ros_msft_onnx/yolo_box.h"
 
 using namespace std;
 
