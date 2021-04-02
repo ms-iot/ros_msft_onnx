@@ -23,6 +23,8 @@ find_package(Eigen3 REQUIRED)
 
 find_package(OpenCV REQUIRED)
 
+find_package(yaml-cpp CONFIG REQUIRED)
+
 find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
@@ -30,6 +32,7 @@ find_package(catkin REQUIRED COMPONENTS
   ros_msft_onnx_msgs
   image_transport
   dynamic_reconfigure
+  yaml-cpp
   roscpp
   cv_bridge
   tf
@@ -53,7 +56,7 @@ include_directories(
 
 add_executable(${PROJECT_NAME}_node src/ros_msft_onnx.cpp src/main.cpp src/yolo_box.cpp src/pose_parser.cpp)
 add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME}_gencfg ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${EIGEN3_LIBS})
+target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${EIGEN3_LIBS} ${YAML_CPP_LIBRARIES})
 
 message("Installing onnxruntime_vendor Nuget package")
 

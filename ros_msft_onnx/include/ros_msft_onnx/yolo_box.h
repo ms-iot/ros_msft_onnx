@@ -19,6 +19,7 @@ namespace yolo
         std::string _labelPath;
         std::vector<float> _anchors;
         std::vector<std::string> _labels;
+        std::string _anchorsPath;
         int _class_count;
         int _row_count;
         int _col_count;
