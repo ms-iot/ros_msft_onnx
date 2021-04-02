@@ -19,7 +19,7 @@ git clone https://github.com/ms-iot/ros_msft_onnx -b noetic-devel
 git clone https://github.com/ms-iot/ros_msft_camera --recursive
 ```
 
-There are two launch files included as samples in the launch folder. `tracker.launch` demonstrates tracking upto 20 classes icluding people in images/video and `pose.launch` demonstrates estimating the position and rotation of an engine block from images\video. To run the engine pose demo, copy the [Engine pose ONNX model](https://github.com/ms-iot/ros_msft_onnx_demo/releases/download/0.0/engine.onnx) to `ros_msft_onnx/testdata/`.
+There are two launch files included as samples in the launch folder. `tracker.launch` demonstrates tracking up to 20 classes icluding people in images/video and `pose.launch` demonstrates estimating the position and rotation of an engine block from images\video. To run the engine pose demo, copy the [Engine pose ONNX model](https://github.com/ms-iot/ros_msft_onnx_demo/releases/download/0.0/engine.onnx) to `ros_msft_onnx/testdata/`.
 
 To use hardware accelleration, install [CUDA Toolkit 10.1](https://developer.nvidia.com/cuda-10.1-download-archive-base) and [cuDNN v7 for CUDA 10.1](https://developer.nvidia.com/rdp/cudnn-archive). 
 
@@ -28,7 +28,7 @@ For a project trained using customvision.ai at runtime you can change the parame
 ```Batchfile
 rosrun rqt_reconfigure rqt_reconfigure
 ```
-Place the relevant extracted onnx zip folder downloaded from customvision.ai to `ros_msft_onnx/testdata/` or a known location. Change the anchor values anch0, anch1,...., anch9 from the default values to 0.573, 0.677, 1.87, 2.06, 3.34, 5.47, 7.88, 3.53, 9.77, 9.17 and update any other relevant parameters below:
+Place the files of interest i.e. the onnx model(.onnx) file and labels.txt obtained from the relevant onnx zip file downloaded from customvision.ai to `ros_msft_onnx/testdata/` or a known location. Change the anchor values in the cfg/anchors.yaml file by commenting the first line and uncommenting the second line, `input_node_name` to "data", `output_node_name` to "model_outputs0" and update any other relevant parameters shown below:
 
 ![Rqt Reconfigure](./ros_msft_onnx/testdata/rqt_reconfigure.PNG)
 
