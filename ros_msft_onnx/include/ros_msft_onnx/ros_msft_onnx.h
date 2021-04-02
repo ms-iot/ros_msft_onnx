@@ -3,6 +3,7 @@
 #include <onnxruntime_cxx_api.h>
 #include <dynamic_reconfigure/server.h>
 #include <ros_msft_onnx/reconfigConfig.h>
+#include <yaml-cpp/yaml.h>
 class OnnxProcessor
 {
 public:

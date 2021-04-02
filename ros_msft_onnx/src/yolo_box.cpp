@@ -30,11 +30,12 @@ namespace yolo
     bool YoloProcessor::init(ros::NodeHandle &nh, ros::NodeHandle &nhPrivate)
     {
         OnnxProcessor::init(nh, nhPrivate);
-        
+
         nhPrivate.getParam("onnx_label_path", _labelPath);
-        
+
         nhPrivate.getParam("input_node_name", _inputName);
         nhPrivate.getParam("output_node_name", _outputName);
+        nhPrivate.getParam("anchors_path", _anchorsPath);
         std::ifstream file(_labelPath);
         std::string line;
         _input_node_names = {_inputName.c_str()};
@@ -56,22 +57,22 @@ namespace yolo
         _col_count = std::round(_tensorWidth / CELL_WIDTH);
         _row_count = std::round(_tensorHeight / CELL_HEIGHT);
         _anchors.clear();
-        for (int i = 0; i< 10; i++){
-        float temp;
-        nhPrivate.getParam("anch"+ std::to_string(i),temp);
-        _anchors.push_back(temp);
+        YAML::Node node = YAML::LoadFile(_anchorsPath);
+        for (auto i = 0; i < node["anchors"].size(); i++)
+        {
+            _anchors.push_back(node["anchors"][i].as<float>());
         }
 
         return true;
     }
 
-    void YoloProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
+    void YoloProcessor::ProcessOutput(std::vector<float> output, cv::Mat &image)
     {
         if (_fake)
         {
             return;
         }
-        
+
         auto boxes = GetRecognizedObjects(output, _confidence);
 
         // If we found a person, send a message
@@ -220,8 +221,8 @@ namespace yolo
 
     int YoloProcessor::GetOffset(int x, int y, int channel)
     {
-        // YOLO outputs a tensor that has a shape of 125x13x13, which 
-        // ONNX flattens into a 1D array.  To access a specific channel 
+        // YOLO outputs a tensor that has a shape of 125x13x13, which
+        // ONNX flattens into a 1D array.  To access a specific channel
         // for a given (x,y) cell position, we need to calculate an offset
         // into the array
         int channelStride = _row_count * _col_count;
@@ -236,12 +237,12 @@ namespace yolo
 
     void YoloProcessor::Softmax(std::vector<float> &values)
     {
-        float max_val{ *std::max_element(values.begin(), values.end()) };
+        float max_val{*std::max_element(values.begin(), values.end())};
         std::transform(values.begin(), values.end(), values.begin(),
-            [&](float x) { return std::exp(x - max_val); });
+                       [&](float x) { return std::exp(x - max_val); });
 
         float exptot = std::accumulate(values.begin(), values.end(), 0.0);
         std::transform(values.begin(), values.end(), values.begin(),
-            [&](float x) { return (float)(x / exptot); });
+                       [&](float x) { return (float)(x / exptot); });
     }
 }
