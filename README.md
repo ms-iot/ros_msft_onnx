@@ -119,7 +119,7 @@ For your own project, you can create a launch file in the following format:
 </launch>
 ```
 
-> While 'Pose' processing is enabled, the service required to generate the model has not been published as of December 2020
+> While 'Pose' processing is enabled, the service required to generate the model has not been published as of April 2021
 
 ## Property Descriptions
 
