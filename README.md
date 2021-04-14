@@ -28,12 +28,12 @@ git clone https://github.com/ms-iot/ros_msft_camera --recursive
 ```
 
 * Ubuntu
-```Batchfile
-mkdir onnx_demo\src
-cd onnx_demo\src
+```sh
+mkdir -p onnx_demo/src
+cd onnx_demo/src
 git clone https://github.com/ms-iot/ros_msft_onnx -b noetic-devel
 
-::For running the samples, clone `ros_msft_camera` as well
+#For running the samples, clone `ros_msft_camera` as well
 git clone https://github.com/ms-iot/cv_camera --recursive
 ```
 
