@@ -80,8 +80,8 @@ rosrun rviz rviz
 
 ### Deep Pose Detection Demo
 `pose.launch` demonstrates estimating the position and rotation of an engine block from images\video.In preperation for running the engine pose demo:
-* Copy  [Engine pose ONNX model](https://github.com/ms-iot/ros_msft_onnx_demo/releases/download/0.0/engine.onnx) to `ros_msft_onnx/testdata/`.
-* Download the `Engine_Block_-_Scaled.stl` mesh from https://www.thingiverse.com/thing:1911808 designed by Eric Harrell, and used with permission.
+* Copy [Engine pose ONNX model](https://github.com/ms-iot/ros_msft_onnx_demo/releases/download/0.0/engine.onnx) to `ros_msft_onnx/testdata/`.
+* Download the `Engine_Block_-_Scaled.stl` mesh from https://www.thingiverse.com/thing:1911808 designed by Eric Harrell, and used with permission. Move or copy it into `ros_msft_onnx/testdata/`.
 
 To run the engine pose detection demo, source the workspace and then roslaunch the launch file.
 ```Batchfile

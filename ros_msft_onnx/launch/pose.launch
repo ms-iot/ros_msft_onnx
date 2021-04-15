@@ -4,7 +4,7 @@
   <arg name="os_windows_arg" value="$(eval 'false' if not optenv('OS', 'unknown').lower().startswith('windows') else 'true')" />
   <arg name="model_bounds_arg" default="[0.00, -56.00, 0.00, -80.48, -112.00, -90.82, 80.48, -112.00, -90.82,80.48, 0.00, -90.82,-80.48, 0.00, -90.82,-80.48, -112.00, 90.82,80.48, -112.00, 90.82, 80.48, 0.00, 90.82,-80.48, 0.00, 90.82]"/>
   <arg name="tracker_type_arg" default="pose"/>
-  <arg name="mesh_resource_arg" default="package://ros_msft_onnx/testdata/meshes/Engine_Block_-_Scaled.stl"/>
+  <arg name="mesh_resource_arg" default="package://ros_msft_onnx/testdata/Engine_Block_-_Scaled.stl"/>
   <arg name="ros_msft_onnx_fake_arg" default="false"/>
   <arg name="mesh_rotation_arg" default="[0, 0, 1.57]"/>
   <arg name="confidence_arg" default=".5"/>
