@@ -58,7 +58,7 @@ bool OnnxProcessor::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
         }
         else
         {
-            ROS_WARN("ONNX: unknown image processing type: %s", imageProcessingType);
+            ROS_WARN("ONNX: unknown image processing type: %s", imageProcessingType.c_str());
             // default;
         }
     }

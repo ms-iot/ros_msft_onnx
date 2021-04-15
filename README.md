@@ -64,7 +64,7 @@ There are two launch files included as samples in the launch folder.
 An object tracking demo and a deep pose detection demo.
 
 ### Person Tracker Demo
- `tracker.launch` demonstrates tracking people in images/video. To try the tracker demo, copy [Object Detection with Tiny-YOLOv2/ONNX Runtime](./onnx_object_detection/README.md) to the testdata folder in ros_msft_onnx before building.
+ `tracker.launch` demonstrates tracking people in images/video.
 
 To run the person tracking detection demo, source the workspace and then roslaunch the launch file.
 
