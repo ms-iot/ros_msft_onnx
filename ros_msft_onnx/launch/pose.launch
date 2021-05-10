@@ -1,9 +1,10 @@
 <launch>
   <!-- The engine ONNX model can be optained from the release on github and added to the testdata folder. -->
   <arg name="onnx_model_path_arg" default="$(find ros_msft_onnx)/testdata/engine.onnx"/>
+  <arg name="os_windows_arg" value="$(eval 'false' if not optenv('OS', 'unknown').lower().startswith('windows') else 'true')" />
   <arg name="model_bounds_arg" default="[0.00, -56.00, 0.00, -80.48, -112.00, -90.82, 80.48, -112.00, -90.82,80.48, 0.00, -90.82,-80.48, 0.00, -90.82,-80.48, -112.00, 90.82,80.48, -112.00, 90.82, 80.48, 0.00, 90.82,-80.48, 0.00, 90.82]"/>
   <arg name="tracker_type_arg" default="pose"/>
-  <arg name="mesh_resource_arg" default="package://ros_msft_onnx/testdata/meshes/Engine_Block.stl"/>
+  <arg name="mesh_resource_arg" default="package://ros_msft_onnx/testdata/Engine_Block_-_Scaled.stl"/>
   <arg name="ros_msft_onnx_fake_arg" default="false"/>
   <arg name="mesh_rotation_arg" default="[0, 0, 1.57]"/>
   <arg name="confidence_arg" default=".5"/>
@@ -21,20 +22,31 @@
     <param name="mesh_scale" type="yaml" value="$(arg mesh_scale_arg)"/>
     <param name="ros_msft_onnx_fake" value="$(arg ros_msft_onnx_fake_arg)"/>
     <param name="link_name" value="$(arg ros_msft_onnx_link_name_arg)"/>
-    <param name="image_topic" value="/camera/image_raw" />
+    <param name="image_topic" value="$(eval '/camera/image_raw' if os_windows_arg else '/cv_camera/image_raw')"/>
     <param name="debug" value="$(arg debug_arg)" />
     <!-- param name="calibration" value="$(find k4a_arm_support)/calibration/ost.yaml" if="$(arg use_ros_msft_onnx)"/ -->
 
     <!-- param name="image_topic" value="/image_publisher/image_raw" / -->
   </node>
   
-  <!-- NOTE: The image properties need to be valid for the camera, or the node will auto select the closest values -->
-  <node pkg="ros_msft_camera" type="ros_msft_camera_node" name="camera">
-    <param name="camera_info_url" value="file://$(find ros_msft_camera)/config/default_calibration.yaml" />
-    <param name="frame_id" value="camera" />
-    <param name="image_width" value="1280" />
-    <param name="image_height" value="720" />
-    <param name="frame_rate" value="30.0" />
-  </node>
+  <!-- The camera node will be selected based on os. ros_msft_camera for Windows and cv_camera for others. -->
+  <group if="$(arg os_windows_arg)" >
+    <!-- NOTE: The image properties need to be valid for the camera, or the node will auto select the closest values -->
+    <node pkg="ros_msft_camera" type="ros_msft_camera_node" name="camera">
+      <param name="camera_info_url" value="file://$(find ros_msft_camera)/config/default_calibration.yaml" />
+      <param name="frame_id" value="camera" />
+      <param name="image_width" value="1280" />
+      <param name="image_height" value="720" />
+      <param name="frame_rate" value="30.0" />
+    </node>
+  </group>
 
+  <group unless="$(arg os_windows_arg)" >
+    <!-- NOTE: The image properties need to be valid for the camera, or the node will auto select the closest values -->
+    <node pkg="cv_camera" type="cv_camera_node" name="cv_camera" output="screen">
+      <param name="rate" type="double" value="5.0"/>
+      <param name="image_width" type="double" value="640"/>
+      <param name="image_height" type="double" value="480"/>
+    </node>
+  </group>
 </launch>

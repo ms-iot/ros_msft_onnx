@@ -1,15 +1,23 @@
-# ONNX (Open Neural Network Exchange) ROS Node
+# ONNX (Open Neural Network Exchange) ROS 1 Node
 
-## Consuming Onnx
-Requirements:
+[ONNX Runtime](https://github.com/microsoft/onnxruntime) is an open source inference engine for ONNX Models.
+ONNX Runtime Execution Providers (EPs) enables the execution of any ONNX model using a single set of inference APIs that provide access to the best hardware acceleration available.
 
-* Install Visual Studio 2019 with UWP development
-* ROS Noetic for Windows
+In simple terms, developers no longer need to worry about the nuances of hardware specific custom libraries to accelerate their machine learning models.
+This repository demonstrates that by enabling the same code with ROS 2 to run on different hardware platforms using their respective AI acceleration libraries for optimized execution of the ONNX model.
 
+## System Requirement
+
+  * Microsoft Windows 10 64-bit or Ubuntu 20.04 LTS x86_64
+  * ROS Noetic
+  * To make use of the hardware acceleration, the system is required to be compatible with [**CUDA 10.1**](https://developer.nvidia.com/cuda-toolkit) and [**cuDNN 7.6.5**](https://developer.nvidia.com/cudnn).
+
+> For GPU support, please follow the installation steps on NVIDIA portal before proceeding.
+
+## How to Build
 The Onnx ROS Node is distrubted as source. To consume it in your robot, clone the ros_msft_onnx sources into your workspace.
 
-For example:
-
+* Windows
 ```Batchfile
 mkdir c:\workspace\onnx_demo\src
 cd c:\workspace\onnx_demo\src
@@ -19,9 +27,66 @@ git clone https://github.com/ms-iot/ros_msft_onnx -b noetic-devel
 git clone https://github.com/ms-iot/ros_msft_camera --recursive
 ```
 
-There are two launch files included as samples in the launch folder. `tracker.launch` demonstrates tracking people in images/video and `pose.launch` demonstrates estimating the position and rotation of an engine block from images\video. To run the engine pose demo, copy the [Engine pose ONNX model](https://github.com/ms-iot/ros_msft_onnx_demo/releases/download/0.0/engine.onnx) to `ros_msft_onnx/testdata/`.
+* Ubuntu
+```sh
+mkdir -p onnx_demo/src
+cd onnx_demo/src
+git clone https://github.com/ms-iot/ros_msft_onnx -b noetic-devel
 
-To use hardware accelleration, install [CUDA Toolkit 10.1](https://developer.nvidia.com/cuda-10.1-download-archive-base) and [cuDNN v7 for CUDA 10.1](https://developer.nvidia.com/rdp/cudnn-archive). 
+#For running the samples, clone `ros_msft_camera` as well
+git clone https://github.com/OTL/cv_camera --recursive
+```
+
+## Building
+ONNX Runtime team is releasing different binaries for CPU and GPU (CUDA) support. To switch between the two, a workspace rebuild is required.
+
+
+Make sure to source your ROS version before building.
+
+* CPU Processing
+
+```Batchfile
+cd onnx_demo
+
+catkin_make -DCUDA_SUPPORT=OFF
+```
+
+* GPU Processing (CUDA)
+
+```Batchfile
+cd onnx_demo
+
+catkin_make -DCUDA_SUPPORT=ON
+```
+
+## Running the samples
+There are two launch files included as samples in the launch folder.
+An object tracking demo and a deep pose detection demo.
+
+### Person Tracker Demo
+ `tracker.launch` demonstrates tracking people in images/video.
+
+To run the person tracking detection demo, source the workspace and then roslaunch the launch file.
+
+```Batchfile
+c:\workspace\devel\setup.bat
+roslaunch ros_msft_onnx tracker.launch
+```
+
+In another command prompt or terminal, run rviz and add the `/tracked_objects/image` topic to see the highlighted people when they have been detected.
+```Batchfile
+rosrun rviz rviz
+```
+
+### Deep Pose Detection Demo
+`pose.launch` demonstrates estimating the position and rotation of an engine block from images\video.In preperation for running the engine pose demo:
+* Copy [Engine pose ONNX model](https://github.com/ms-iot/ros_msft_onnx_demo/releases/download/0.0/engine.onnx) to `ros_msft_onnx/testdata/`.
+* Download the `Engine_Block_-_Scaled.stl` mesh from [Thingiverse](https://www.thingiverse.com/thing:1911808) designed by Eric Harrell, and used with permission. Move or copy it into `ros_msft_onnx/testdata/`.
+
+To run the engine pose detection demo, source the workspace and then roslaunch the launch file.
+```Batchfile
+roslaunch ros_msft_onnx pose.launch
+```
 
 For your own project, you can create a launch file in the following format:
 
@@ -54,7 +119,7 @@ For your own project, you can create a launch file in the following format:
 </launch>
 ```
 
-> While 'Pose' processing is enabled, the service required to generate the model has not been published as of October 2020
+> While 'Pose' processing is enabled, the service required to generate the model has not been published as of April 2021
 
 ## Property Descriptions
 
@@ -74,29 +139,6 @@ For your own project, you can create a launch file in the following format:
 | mesh_resource| The mesh used for debug rendering pose |
 | model_bounds| 9 coordinates used to perform the point in perspective caluclation for pose |
 | calibration | Path to the OpenCV calibration file for point in persective |
-
-## Building
-Make sure to source your ROS version before building. Then use catkin_make to build.
-```Batchfile
-cd c:\workspace\src
-catkin_make
-```
-
-## Running the samples
-To run the samples, first source the workspace:
-```Batchfile
-cd c:\workspace\devel\setup.bat
-```
-
-Then, for the tracker sample run:
-```Batchfile
-roslaunch ros_msft_onnx tracker.launch
-```
-
-For the engine pose sample run:
-```Batchfile
-roslaunch ros_msft_onnx pose.launch
-```
 
 ## Subscriptions
 Onnx subscribes to the topic listed in the `image_topic` property, or `/camera/image_raw`
