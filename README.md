@@ -102,22 +102,22 @@ roslaunch ros_msft_onnx pose.launch
 
 ## Property Descriptions
 
-| Property | Description |
-|----------| ------------|
-| onnx_model_path | Path to the model.onnx file | 
-| confidence | Minimum confidence before publishing an event. 0 to 1 |
-| tensor_width| The Width of the input to the model. |
-| tensor_height| The Height of the input to the model. |
-| tracker_type| Currently enabled - `yolo` or `pose`. |
-| image_processing| `resize`, `scale` or `crop` |
-| debug| `true` or `false` determines if a debug image is published |
-| image_topic| The image topic to subscribe to |
-| label | used to filter the found object to a specific label |
-| mesh_rotation| The orientation of the mesh when debug rendering pose |
-| mesh_scale| The scale of the mesh when debug rendering pose |
-| mesh_resource| The mesh used for debug rendering pose |
-| model_bounds| 9 coordinates used to perform the point in perspective caluclation for pose |
-| calibration | Path to the OpenCV calibration file for point in persective |
+| Property         | Description                                                                 |
+| ---------------- | --------------------------------------------------------------------------- |
+| onnx_model_path  | Path to the model.onnx file                                                 |
+| confidence       | Minimum confidence before publishing an event. 0 to 1                       |
+| tensor_width     | The Width of the input to the model.                                        |
+| tensor_height    | The Height of the input to the model.                                       |
+| tracker_type     | Currently enabled - `yolo` or `pose`.                                       |
+| image_processing | `resize`, `scale` or `crop`                                                 |
+| debug            | `true` or `false` determines if a debug image is published                  |
+| image_topic      | The image topic to subscribe to                                             |
+| label            | used to filter the found object to a specific label                         |
+| mesh_rotation    | The orientation of the mesh when debug rendering pose                       |
+| mesh_scale       | The scale of the mesh when debug rendering pose                             |
+| mesh_resource    | The mesh used for debug rendering pose                                      |
+| model_bounds     | 9 coordinates used to perform the point in perspective caluclation for pose |
+| calibration      | Path to the OpenCV calibration file for point in persective                 |
 
 ## Subscriptions
 Onnx subscribes to the topic listed in the `image_topic` property, or `/camera/image_raw`
