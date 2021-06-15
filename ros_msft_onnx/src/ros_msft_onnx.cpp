@@ -31,34 +31,30 @@ static std::wstring to_wstring(std::string str)
 }
 
 OnnxProcessor::OnnxProcessor()
-: _process(ImageProcessing::Scale)
-, _confidence(0.70f)
-, _debug(false)
-, _normalize(false)
+    : _process(ImageProcessing::Scale), _confidence(0.70f), _debug(false), _normalize(false)
 {
-
 }
 
-bool OnnxProcessor::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
+bool OnnxProcessor::init(ros::NodeHandle &nh, ros::NodeHandle &nhPrivate)
 {
-    std::string imageProcessingType;
-    if (nhPrivate.getParam("image_processing", imageProcessingType))
+
+    if (nhPrivate.getParam("image_processing", _imageProcessingType))
     {
-        if (imageProcessingType == "crop")
+        if (_imageProcessingType == "crop")
         {
             _process = Crop;
         }
-        else if (imageProcessingType == "scale")
+        else if (_imageProcessingType == "scale")
         {
             _process = Scale;
         }
-        else if (imageProcessingType == "resize")
+        else if (_imageProcessingType == "resize")
         {
             _process = Resize;
         }
         else
         {
-            ROS_WARN("ONNX: unknown image processing type: %s", imageProcessingType.c_str());
+            ROS_WARN("ONNX: unknown image processing type: %s", _imageProcessingType.c_str());
             // default;
         }
     }
@@ -68,7 +64,7 @@ bool OnnxProcessor::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
     {
         _tensorWidth = (uint)temp;
     }
-    else 
+    else
     {
         _tensorWidth = kDefaultTensorWidth;
     }
@@ -78,13 +74,13 @@ bool OnnxProcessor::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
     {
         _tensorHeight = (uint)temp;
     }
-    else 
+    else
     {
         _tensorHeight = kDefaultTensorHeight;
     }
 
     nhPrivate.param<bool>("onnx_fake", _fake, false);
-    
+
     nhPrivate.getParam("link_name", _linkName);
 
     if (!nhPrivate.getParam("onnx_model_path", _onnxModel) ||
@@ -134,7 +130,7 @@ bool OnnxProcessor::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
     image_transport::ImageTransport it(nh);
     _cameraSub = it.subscribe(imageTopic.c_str(), 1, &OnnxProcessor::ProcessImage, this);
     _image_pub = it.advertise("tracked_objects/image", 1);
-    
+
     try
     {
         //*************************************************************************
@@ -158,7 +154,7 @@ bool OnnxProcessor::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
         _session = std::make_shared<Ort::Session>(*_env, modelFullPath, session_options);
         _allocator = std::make_shared<Ort::AllocatorWithDefaultOptions>();
     }
-    catch (std::exception& e)
+    catch (std::exception &e)
     {
         ROS_ERROR("ONNX: Failed to Start ML Session: %s", e.what());
         return false;
@@ -166,7 +162,7 @@ bool OnnxProcessor::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
     return true;
 }
 
-void OnnxProcessor::ProcessImage(const sensor_msgs::ImageConstPtr& image) 
+void OnnxProcessor::ProcessImage(const sensor_msgs::ImageConstPtr &image)
 {
     if (_session == nullptr)
     {
@@ -180,7 +176,7 @@ void OnnxProcessor::ProcessImage(const sensor_msgs::ImageConstPtr& image)
     {
         cv_ptr = cv_bridge::toCvCopy(image, sensor_msgs::image_encodings::BGR8);
     }
-    catch (cv_bridge::Exception& e)
+    catch (cv_bridge::Exception &e)
     {
         ROS_ERROR("ONNX: cv_bridge exception: %s", e.what());
         return;
@@ -197,8 +193,8 @@ void OnnxProcessor::ProcessImage(const sensor_msgs::ImageConstPtr& image)
         return;
     }
 
-    if (_process == Crop && 
-        (uint)s.width > _tensorWidth && 
+    if (_process == Crop &&
+        (uint)s.width > _tensorWidth &&
         (uint)s.height > _tensorHeight)
     {
         // crop
@@ -230,7 +226,7 @@ void OnnxProcessor::ProcessImage(const sensor_msgs::ImageConstPtr& image)
 
         cv::resize(cv_ptr->image, image_resized, downsampleSize, 0, 0, cv::INTER_CUBIC);
 
-        // now extract the center  
+        // now extract the center
         cv::Rect ROI((downsampleSize.width - _tensorWidth) / 2, (downsampleSize.height - _tensorHeight) / 2, _tensorWidth, _tensorHeight);
         image_resized = image_resized(ROI);
     }
@@ -275,12 +271,12 @@ void OnnxProcessor::ProcessImage(const sensor_msgs::ImageConstPtr& image)
         auto output_type_info = output_tensor.GetTensorTypeAndShapeInfo();
         size_t output_total_len = output_type_info.GetElementCount();
 
-        float* floatarr = output_tensor.GetTensorMutableData<float>();
-        
+        float *floatarr = output_tensor.GetTensorMutableData<float>();
+
         output.resize(output_total_len);
         memcpy(&output[0], floatarr, output_total_len * sizeof(float));
     }
-    catch (std::exception& e)
+    catch (std::exception &e)
     {
         ROS_ERROR("ONNX: Session Failed!: %s", e.what());
         return;
@@ -289,14 +285,44 @@ void OnnxProcessor::ProcessImage(const sensor_msgs::ImageConstPtr& image)
     ProcessOutput(output, image_resized);
 }
 
-bool OnnxTracker::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
+bool OnnxTracker::init(ros::NodeHandle &nh, ros::NodeHandle &nhPrivate)
 {
     _nh = nh;
     _nhPrivate = nhPrivate;
 
+    f = boost::bind(&OnnxTracker::callback, this, _1, _2);
+    server.setCallback(f);
+
+    return _status;
+}
+
+void OnnxTracker::callback(ros_msft_onnx::reconfigConfig &config, uint32_t level)
+{
+    ROS_INFO("Reconfigure Request: %d %d %f %s %s %s %s %s %s %s %s\n",
+             config.tensor_height, config.tensor_width, config.confidence, config.onnx_model_path.c_str(), config.onnx_label_path.c_str(),
+             config.anchors_path.c_str(), config.tracker_type.c_str(), config.image_processing.c_str(), config.input_node_name.c_str(), 
+             config.output_node_name.c_str(), config.debug ? "True" : "False");
+    stopProcessor();
+    startProcessor(config);
+}
+
+void OnnxTracker::startProcessor(ros_msft_onnx::reconfigConfig &config)
+{
+
     // Parameters.
+    _nhPrivate.setParam("tensor_height", config.tensor_height);
+    _nhPrivate.setParam("tensor_width", config.tensor_width);
+    _nhPrivate.setParam("confidence", config.confidence);
+    _nhPrivate.setParam("onnx_model_path", config.onnx_model_path);
+    _nhPrivate.setParam("onnx_label_path", config.onnx_label_path);
+    _nhPrivate.setParam("anchors_path", config.anchors_path);
+    _nhPrivate.setParam("tracker_type", config.tracker_type);
+    _nhPrivate.setParam("image_processing", config.image_processing);
+    _nhPrivate.setParam("input_node_name", config.input_node_name);
+    _nhPrivate.setParam("output_node_name", config.output_node_name);
+    _nhPrivate.setParam("debug", config.debug);
     std::string trackerType;
-    if (nhPrivate.getParam("tracker_type", trackerType))
+    if (_nhPrivate.getParam("tracker_type", trackerType))
     {
         if (trackerType == "yolo")
         {
@@ -314,13 +340,27 @@ bool OnnxTracker::init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate)
         _processor = std::make_shared<yolo::YoloProcessor>();
     }
 
-    return _processor->init(_nh, nhPrivate);
+    _status = _processor->init(_nh, _nhPrivate);
+}
+
+void ::OnnxTracker::stopProcessor()
+{
+    _nhPrivate.deleteParam("tensor_height");
+    _nhPrivate.deleteParam("tensor_width");
+    _nhPrivate.deleteParam("confidence");
+    _nhPrivate.deleteParam("onnx_model_path");
+    _nhPrivate.deleteParam("onnx_label_path");
+    _nhPrivate.deleteParam("anchors_path");
+    _nhPrivate.deleteParam("tracker_type");
+    _nhPrivate.deleteParam("image_processing");
+    _nhPrivate.deleteParam("input_node_name");
+    _nhPrivate.deleteParam("output_node_name");
+    _nhPrivate.deleteParam("debug");
 }
 
 bool OnnxTracker::shutdown()
 {
     _nh.shutdown();
     _nhPrivate.shutdown();
-
     return true;
 }

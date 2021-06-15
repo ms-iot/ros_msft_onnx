@@ -61,10 +61,10 @@ catkin_make -DCUDA_SUPPORT=ON
 
 ## Running the samples
 There are two launch files included as samples in the launch folder.
-An object tracking demo and a deep pose detection demo.
+An object tracking demo and a deep pose detection demo. 
 
-### Person Tracker Demo
- `tracker.launch` demonstrates tracking people in images/video.
+### Object Tracker Demo
+ `tracker.launch` demonstrates tracking of up to 20 classes icluding people in images/video.
 
 To run the person tracking detection demo, source the workspace and then roslaunch the launch file.
 
@@ -78,6 +78,15 @@ In another command prompt or terminal, run rviz and add the `/tracked_objects/im
 rosrun rviz rviz
 ```
 
+For a project trained using customvision.ai at runtime you can change the parameters using rqt_reconfigure.
+
+```Batchfile
+rosrun rqt_reconfigure rqt_reconfigure
+```
+Please follow this order, start by placing the files of interest i.e. the onnx model(.onnx) file and labels.txt obtained from the relevant onnx zip file downloaded from customvision.ai to `ros_msft_onnx/testdata/` or a known location. Change the anchor values in the cfg/anchors.yaml file by commenting the first line and uncommenting the second line, finally update `input_node_name` to "data", `output_node_name` to "model_outputs0" and update any other relevant parameters shown below:
+
+![Rqt Reconfigure](./ros_msft_onnx/testdata/rqt_reconfigure.PNG)
+
 ### Deep Pose Detection Demo
 `pose.launch` demonstrates estimating the position and rotation of an engine block from images\video.In preperation for running the engine pose demo:
 * Copy [Engine pose ONNX model](https://github.com/ms-iot/ros_msft_onnx_demo/releases/download/0.0/engine.onnx) to `ros_msft_onnx/testdata/`.
@@ -88,57 +97,27 @@ To run the engine pose detection demo, source the workspace and then roslaunch t
 roslaunch ros_msft_onnx pose.launch
 ```
 
-For your own project, you can create a launch file in the following format:
-
-```xml
-<launch>
-  <arg name="onnx_model_path_arg" default="$(find ros_msft_onnx)/testdata/model.onnx"/>
-  <node pkg="ros_msft_onnx" type="ros_msft_onnx_node" name="ros_msft_onnx" output="screen">
-    <param name="onnx_model_path" value="$(arg onnx_model_path_arg)"/>
-    <param name="confidence" value="0.5"/>
-    <param name="tensor_width" value="416"/>
-    <param name="tensor_height" value="416"/>
-    <param name="tracker_type" value="yolo"/>
-    <param name="image_processing" value="resize"/>
-    <param name="debug" value="true"/>
-    <param name="image_topic" value="/camera/image_raw" />
-  </node>
-  
-  <!-- NOTE: The image properties need to be valid for the camera, or the node will auto select the closest values -->
-  <node pkg="ros_msft_camera" type="ros_msft_camera_node" name="camera">
-    <param name="camera_info_url" value="file://$(find ros_msft_camera)/config/default_calibration.yaml" />
-    <param name="frame_id" value="camera" />
-    <param name="image_width" value="1280" />
-    <param name="image_height" value="720" />
-    <param name="frame_rate" value="30.0" />
-  </node>
-
-  <node pkg="tf" type="static_transform_publisher" name="onnx_link"
-    args="0 -0.02  0 0 0 0 map base_link 100" />  
-
-</launch>
-```
 
 > While 'Pose' processing is enabled, the service required to generate the model has not been published as of April 2021
 
 ## Property Descriptions
 
-| Property | Description |
-|----------| ------------|
-| onnx_model_path | Path to the model.onnx file | 
-| confidence | Minimum confidence before publishing an event. 0 to 1 |
-| tensor_width| The Width of the input to the model. |
-| tensor_height| The Height of the input to the model. |
-| tracker_type| Currently enabled - `yolo` or `pose`. |
-| image_processing| `resize`, `scale` or `crop` |
-| debug| `true` or `false` determines if a debug image is published |
-| image_topic| The image topic to subscribe to |
-| label | used to filter the found object to a specific label |
-| mesh_rotation| The orientation of the mesh when debug rendering pose |
-| mesh_scale| The scale of the mesh when debug rendering pose |
-| mesh_resource| The mesh used for debug rendering pose |
-| model_bounds| 9 coordinates used to perform the point in perspective caluclation for pose |
-| calibration | Path to the OpenCV calibration file for point in persective |
+| Property         | Description                                                                 |
+| ---------------- | --------------------------------------------------------------------------- |
+| onnx_model_path  | Path to the model.onnx file                                                 |
+| confidence       | Minimum confidence before publishing an event. 0 to 1                       |
+| tensor_width     | The Width of the input to the model.                                        |
+| tensor_height    | The Height of the input to the model.                                       |
+| tracker_type     | Currently enabled - `yolo` or `pose`.                                       |
+| image_processing | `resize`, `scale` or `crop`                                                 |
+| debug            | `true` or `false` determines if a debug image is published                  |
+| image_topic      | The image topic to subscribe to                                             |
+| label            | used to filter the found object to a specific label                         |
+| mesh_rotation    | The orientation of the mesh when debug rendering pose                       |
+| mesh_scale       | The scale of the mesh when debug rendering pose                             |
+| mesh_resource    | The mesh used for debug rendering pose                                      |
+| model_bounds     | 9 coordinates used to perform the point in perspective caluclation for pose |
+| calibration      | Path to the OpenCV calibration file for point in persective                 |
 
 ## Subscriptions
 Onnx subscribes to the topic listed in the `image_topic` property, or `/camera/image_raw`

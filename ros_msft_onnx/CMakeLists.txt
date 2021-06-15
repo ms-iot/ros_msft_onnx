@@ -23,20 +23,28 @@ find_package(Eigen3 REQUIRED)
 
 find_package(OpenCV REQUIRED)
 
+find_package(yaml-cpp CONFIG REQUIRED)
+
 find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
   visualization_msgs
   ros_msft_onnx_msgs
   image_transport
+  dynamic_reconfigure
+  yaml-cpp
   roscpp
   cv_bridge
   tf
 )
 
+generate_dynamic_reconfigure_options(
+  cfg/reconfig.cfg
+)
+
 catkin_package(
   INCLUDE_DIRS include
-  CATKIN_DEPENDS std_msgs geometry_msgs visualization_msgs ros_msft_onnx_msgs image_transport roscpp cv_bridge tf
+  CATKIN_DEPENDS std_msgs geometry_msgs visualization_msgs ros_msft_onnx_msgs image_transport dynamic_reconfigure roscpp cv_bridge tf
   CFG_EXTRAS  "onnxruntime_vendor-extras.cmake"
 )
 
@@ -47,19 +55,19 @@ include_directories(
 )
 
 add_executable(${PROJECT_NAME}_node src/ros_msft_onnx.cpp src/main.cpp src/yolo_box.cpp src/pose_parser.cpp)
-add_dependencies(${PROJECT_NAME}_node ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${EIGEN3_LIBS})
+add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME}_gencfg ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${EIGEN3_LIBS} ${YAML_CPP_LIBRARIES})
 
 message("Installing onnxruntime_vendor Nuget package")
 
 if(CUDA_SUPPORT)
-  set(ONNX_RUNTIME "Microsoft.ML.OnnxRuntime.Gpu.1.4.0")
-  set(PACKAGE_URL "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.Gpu/1.4.0")
-  set(PACKAGE_SHA512 "c9c2ba5c594c92c1e426e9c53f9909e8851a41c99f48f8a369e082f8047d521b236f2fbb943e73975cbb45bd9957f20139c25959e50e1679dca9eeac08f73b31")
+  set(ONNX_RUNTIME "Microsoft.ML.OnnxRuntime.Gpu.1.7.1")
+  set(PACKAGE_URL "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.Gpu/1.7.1")
+  set(PACKAGE_SHA512 "41112118007aae34fcc38100152df6e6fa5fc567e61aa4ded42a26d39751f1be7ec225c0d73799f065015e284f0fb9bd7e0835c733e9abad5b0243a391411f8d")
 else()
-  set(ONNX_RUNTIME "Microsoft.ML.OnnxRuntime.1.4.0")
-  set(PACKAGE_URL "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime/1.4.0")
-  set(PACKAGE_SHA512 "cbff106bb1f114ee1d510b594abb487e9f965b7b7a3f37b92846013eb086126a4cd69eb4564717fe1acf04d4399d1fcd0a52c3ca508f330e91a3e5d0fe560ca3")
+  set(ONNX_RUNTIME "Microsoft.ML.OnnxRuntime.1.7.0")
+  set(PACKAGE_URL "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime/1.7.0")
+  set(PACKAGE_SHA512 "1fc15386bdfa455f457e50899e3c9c454aafbdc345799dcf4ecfd6990a9dbd8cd7f0b1f3bf412c47c900543c535f95aa1cb1e14e9851cb9b600c60a981f38a50")
 endif()
 
 file(DOWNLOAD
@@ -95,8 +103,8 @@ if(MSVC)
   configure_file(${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}/runtimes/${ARCH}/native/onnxruntime.lib ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/onnxruntime.lib COPYONLY)
   configure_file(${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}/runtimes/${ARCH}/native/onnxruntime.pdb ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/onnxruntime.pdb COPYONLY)
 else()
-  configure_file(${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}/runtimes/${ARCH}/native/libonnxruntime.so ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${PROJECT_NAME}/libonnxruntime.so.1.4.0 COPYONLY)
-  target_link_libraries(${PROJECT_NAME}_node ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${PROJECT_NAME}/libonnxruntime.so.1.4.0)
+  target_link_libraries(${PROJECT_NAME}_node ${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}/runtimes/${ARCH}/native/libonnxruntime.so)
+  configure_file(${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}/runtimes/${ARCH}/native/libonnxruntime.so ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/libonnxruntime.so COPYONLY)
 endif()
 
 # The node expects to use the Tiny YOLO model available in the ONNX model zoo.

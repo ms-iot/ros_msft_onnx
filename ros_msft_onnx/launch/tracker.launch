@@ -1,16 +1,8 @@
 <launch>
-  <arg name="onnx_model_path_arg" default="$(find ros_msft_onnx)/testdata/model.onnx"/>
   <arg name="os_windows_arg" value="$(eval 'false' if not optenv('OS', 'unknown').lower().startswith('windows') else 'true')" />
 
   <node pkg="ros_msft_onnx" type="ros_msft_onnx_node" name="ros_msft_onnx" output="screen">
-    <param name="onnx_model_path" value="$(arg onnx_model_path_arg)"/>
-    <param name="confidence" value="0.5"/>
-    <param name="tensor_width" value="416"/>
-    <param name="tensor_height" value="416"/>
-    <param name="tracker_type" value="yolo"/>
-    <param name="image_processing" value="resize"/>
     <param name="image_topic" value="$(eval '/camera/image_raw' if os_windows_arg else '/cv_camera/image_raw')"/>
-    <param name="debug" value="true"/>
   </node>
   
   <!-- The camera node will be selected based on os. ros_msft_camera for Windows and cv_camera for others. -->

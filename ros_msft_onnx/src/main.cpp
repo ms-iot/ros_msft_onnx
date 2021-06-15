@@ -24,6 +24,7 @@ int main(int argc, char **argv)
     ros::NodeHandle nhPrivate("~");
 
     OnnxTracker tracker;
+     
 
     if (tracker.init(nh, nhPrivate))
     {
@@ -37,4 +38,6 @@ int main(int argc, char **argv)
     {
         return 1;
     }
+
+
 }

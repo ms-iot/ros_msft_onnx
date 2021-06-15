@@ -7,11 +7,6 @@
 
 namespace yolo
 {
-    struct YoloInitOptions
-    {
-        std::string modelFullPath;
-    };
-
     struct YoloBox
     {
     public:
@@ -21,7 +16,15 @@ namespace yolo
 
     class YoloProcessor : public OnnxProcessor
     {
-        std::string _label;
+        std::string _labelPath;
+        std::vector<float> _anchors;
+        std::vector<std::string> _labels;
+        std::string _anchorsPath;
+        int _class_count;
+        int _row_count;
+        int _col_count;
+        std::string _inputName;
+        std::string _outputName;
     public:
         YoloProcessor();
         
@@ -30,7 +33,7 @@ namespace yolo
         std::vector<YoloBox> GetRecognizedObjects(std::vector<float> modelOutputs, float threshold = 0.3f);
         virtual void ProcessOutput(std::vector<float> output, cv::Mat& image);
     private:
-        static int GetOffset(int x, int y, int channel);
+        int GetOffset(int x, int y, int channel);
         static float IntersectionOverUnion(YoloBox a, YoloBox b);
         static float Sigmoid(float value);
         static void Softmax(std::vector<float> &values);

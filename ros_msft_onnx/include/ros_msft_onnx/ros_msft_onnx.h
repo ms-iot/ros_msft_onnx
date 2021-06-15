@@ -1,7 +1,9 @@
 #pragma once
 
 #include <onnxruntime_cxx_api.h>
-
+#include <dynamic_reconfigure/server.h>
+#include <ros_msft_onnx/reconfigConfig.h>
+#include <yaml-cpp/yaml.h>
 class OnnxProcessor
 {
 public:
@@ -39,6 +41,8 @@ protected:
 
     std::string _linkName;
     std::string _onnxModel;
+
+    std::string _imageProcessingType;
     std::string _calibration;
 
     cv::Mat _camera_matrix;
@@ -49,41 +53,11 @@ protected:
     bool _debug;
     bool _normalize;
 
-    ros::Publisher _detect_pub;
-    image_transport::Publisher _image_pub;
-    image_transport::Publisher _debug_image_pub;
-    image_transport::Subscriber _cameraSub;
-/* TODO (lilustga): remove this
-    bool _fake;
-    winrt::hstring _inName;
-    winrt::hstring _outName;
-    std::string frame_id_;
-    std::string _onnxModel;
-    std::string _calibration;
-
-    cv::Mat _camera_matrix;
-    cv::Mat _dist_coeffs;
-
-    
-    float _confidence;
-
-    bool _debug;
-    bool _normalize;
-
-    uint _tensorWidth;
-    uint _tensorHeight;
-
-    int _channelCount;
-    int _rowCount;
-    int _colCount;
-    winrt::Windows::AI::MachineLearning::LearningModel _model = nullptr;
-    winrt::Windows::AI::MachineLearning::LearningModelSession _session = nullptr;
 
     ros::Publisher _detect_pub;
     image_transport::Publisher _image_pub;
     image_transport::Publisher _debug_image_pub;
     image_transport::Subscriber _cameraSub;
-*/
 
 };
 
@@ -91,6 +65,9 @@ class OnnxTracker
 {
     ros::NodeHandle _nh;
     ros::NodeHandle _nhPrivate;
+    dynamic_reconfigure::Server<ros_msft_onnx::reconfigConfig> server;
+    dynamic_reconfigure::Server<ros_msft_onnx::reconfigConfig>::CallbackType f;
+    bool _status;
 
     std::shared_ptr<OnnxProcessor> _processor;
 
@@ -98,6 +75,9 @@ public:
     OnnxTracker() { };
 
     bool init(ros::NodeHandle& nh, ros::NodeHandle& nhPrivate);
+    void callback(ros_msft_onnx::reconfigConfig &config, uint32_t level);
+    void startProcessor(ros_msft_onnx::reconfigConfig &config); 
+    void stopProcessor(); 
     bool shutdown();
 };
 
