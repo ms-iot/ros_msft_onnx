@@ -32,7 +32,7 @@ jobs:
       run: |
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64
         call "C:\opt\ros\%ROSDISTRO%\x64\setup.bat"
-        colcon build  --event-handlers console_cohesion+
+        colcon build  --event-handlers console_cohesion+ --paths C:\opt\ros\foxy\x64\python.exe
       env:
         ROSDISTRO: ${{ matrix.ROSDISTRO }}
 
