@@ -16,8 +16,10 @@ jobs:
       matrix:
           os: [ubuntu-20.04]
     steps:
-    - uses: ros-tooling/setup-ros@0.0.26
-    - uses: ros-tooling/action-ros-ci@0.1.0
+    - uses: ros-tooling/setup-ros@0.2.1
+      with:
+        required-ros-distributions: foxy
+    - uses: ros-tooling/action-ros-ci@0.2.1
       with:
         package-name: ros_msft_onnx
         target-ros2-distro: foxy
