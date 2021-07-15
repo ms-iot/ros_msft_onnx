@@ -6,7 +6,9 @@ import launch
 import launch.actions
 import launch.substitutions
 import launch_ros.actions
+from launch import conditions
 from launch.actions import DeclareLaunchArgument
+import platform 
 
 from ament_index_python.packages import get_package_share_directory
 
@@ -19,6 +21,8 @@ def generate_launch_description():
         'models',
         'tinyyolov2-8.onnx')
 
+    os_name = platform.system()
+    os_flag = "false" if os_name == 'Windows' else "true" # default to Linux
 
     return launch.LaunchDescription([
         DeclareLaunchArgument(
@@ -36,7 +40,17 @@ def generate_launch_description():
                 {'tensor_height': 416},
                 {'tracker_type': 'yolo'},
                 {'debug': True}
-            ]),
+            ], 
+            condition=conditions.IfCondition(os_flag)),
+        launch_ros.actions.Node(
+            package='win_camera', executable='win_camera_node', output='screen',
+            name=['win_camera'],
+            parameters=[
+                {'frame_rate': 5.0},
+                {'frame_id': 'camera'},
+                {'camera_info_url': 'package://win_camera/camera_info/camera.yaml'},
+            ], 
+            condition=conditions.UnlessCondition(os_flag)),            
         launch_ros.actions.Node(
             package='cv_camera', executable='cv_camera_node', output='screen',
             name=['cv_camera'],

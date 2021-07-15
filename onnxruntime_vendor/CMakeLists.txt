@@ -15,13 +15,13 @@ else()
 endif()
 
 if(CUDA_SUPPORT)
-    message("Building with Cuda support")
-    set(PACKAGE_URL "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.Gpu/1.4.0")
-    set(PACKAGE_SHA512 "c9c2ba5c594c92c1e426e9c53f9909e8851a41c99f48f8a369e082f8047d521b236f2fbb943e73975cbb45bd9957f20139c25959e50e1679dca9eeac08f73b31")
+  set(ONNX_RUNTIME "Microsoft.ML.OnnxRuntime.Gpu.1.7.1")
+  set(PACKAGE_URL "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.Gpu/1.7.1")
+  set(PACKAGE_SHA512 "41112118007aae34fcc38100152df6e6fa5fc567e61aa4ded42a26d39751f1be7ec225c0d73799f065015e284f0fb9bd7e0835c733e9abad5b0243a391411f8d")
 else()
-    message("Building without Cuda support")
-    set(PACKAGE_URL "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime/1.4.0")
-    set(PACKAGE_SHA512 "cbff106bb1f114ee1d510b594abb487e9f965b7b7a3f37b92846013eb086126a4cd69eb4564717fe1acf04d4399d1fcd0a52c3ca508f330e91a3e5d0fe560ca3")
+  set(ONNX_RUNTIME "Microsoft.ML.OnnxRuntime.1.7.0")
+  set(PACKAGE_URL "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime/1.7.0")
+  set(PACKAGE_SHA512 "1fc15386bdfa455f457e50899e3c9c454aafbdc345799dcf4ecfd6990a9dbd8cd7f0b1f3bf412c47c900543c535f95aa1cb1e14e9851cb9b600c60a981f38a50")
 endif()
 
 file(DOWNLOAD
@@ -31,43 +31,43 @@ file(DOWNLOAD
     SHOW_PROGRESS
 )
 
-file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/onnxruntime")
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}")
 
 add_custom_target(ExtractOnnxruntime ALL
     ${CMAKE_COMMAND} -E
     tar xvzf "${CMAKE_CURRENT_BINARY_DIR}/onnxruntime.nuget"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/onnxruntime"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}"
 )
 
 install(
-    DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/build/native/include/
+    DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}/build/native/include/
     DESTINATION include
 )
 
 install(
     FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/runtimes/win-x64/native/onnxruntime.dll
-        ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/runtimes/win-x64/native/onnxruntime.pdb
+        ${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}/runtimes/win-x64/native/onnxruntime.dll
+        ${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}/runtimes/win-x64/native/onnxruntime.pdb
     DESTINATION bin
 )
 
 install(
     FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/runtimes/win-x64/native/onnxruntime.lib
+        ${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}/runtimes/win-x64/native/onnxruntime.lib
     DESTINATION lib
 )
 
 install(
     FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/runtimes/linux-x64/native/libonnxruntime.so
+        ${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}/runtimes/linux-x64/native/libonnxruntime.so
     DESTINATION lib
-    RENAME libonnxruntime.so.1.4.0
+    RENAME libonnxruntime.so.1.7.0
 )
 
 install(
     FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/LICENSE.txt
-        ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/ThirdPartyNotices.txt
+        ${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}/LICENSE.txt
+        ${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}/ThirdPartyNotices.txt
     DESTINATION share/${PROJECT_NAME}
 )
 
