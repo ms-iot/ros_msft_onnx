@@ -5,14 +5,8 @@
 
 #include <onnx/onnx_tracker.h>
 
-#include <windows.h>
 int main(int argc, char **argv)
 {
-    while (!IsDebuggerPresent())
-    {
-        Sleep(1);
-    }
-
     rclcpp::init(argc, argv);
     rclcpp::Node::SharedPtr node = rclcpp::Node::make_shared("ros_msft_onnx");
 
