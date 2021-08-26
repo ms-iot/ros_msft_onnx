@@ -1,4 +1,5 @@
 #include <ros/ros.h>
+#include <boost/bind/bind.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <image_transport/image_transport.h>
 #include <visualization_msgs/MarkerArray.h>
@@ -141,6 +142,8 @@ bool OnnxProcessor::init(ros::NodeHandle &nh, ros::NodeHandle &nhPrivate)
         // initialize session options if needed
         Ort::SessionOptions session_options;
         session_options.SetIntraOpNumThreads(1);
+        session_options.DisableMemPattern();    // Required for DirectML
+        session_options.SetExecutionMode(ExecutionMode::ORT_SEQUENTIAL);    // Required for DirectML
         session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
 
         std::string modelString = _onnxModel;
@@ -290,7 +293,7 @@ bool OnnxTracker::init(ros::NodeHandle &nh, ros::NodeHandle &nhPrivate)
     _nh = nh;
     _nhPrivate = nhPrivate;
 
-    f = boost::bind(&OnnxTracker::callback, this, _1, _2);
+    f = boost::bind(&OnnxTracker::callback, this, boost::placeholders::_1, boost::placeholders::_2);
     server.setCallback(f);
 
     return _status;
