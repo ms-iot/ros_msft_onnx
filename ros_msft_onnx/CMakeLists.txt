@@ -12,12 +12,13 @@ if(MSVC)
   add_compile_options(/wd4267)
   add_compile_options(/await)
 
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
   add_definitions(-D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS)
 
 endif()
 
 add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
-  
+
 
 option(CUDA_SUPPORT "use CUDA support onnxruntime library" OFF)
 
