@@ -6,17 +6,17 @@
 
 #include "ros_msft_onnx/ros_msft_onnx.h"
 
+#ifdef _WIN32
+#include <objbase.h>
+#endif
+
 using namespace std;
 
 int main(int argc, char **argv)
 {
-    /*
-    ROS_WARN("ONNX: Waiting for Debugger");
-    while (!IsDebuggerPresent())
-    {
-        Sleep(5);
-    }
-    */
+    #ifdef _WIN32
+    HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+    #endif
 
     ros::init(argc, argv, "ros_msft_onnx");
 
@@ -39,5 +39,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-
+#ifdef _WIN32
+    CoUninitialize();
+#endif
 }

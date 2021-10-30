@@ -14,6 +14,9 @@
 #include <codecvt>
 #include <fstream>
 #include <sstream>
+#ifdef _WIN32
+#include "dml_provider_factory.h"
+#endif
 
 using namespace std;
 
@@ -149,6 +152,9 @@ bool OnnxProcessor::init(ros::NodeHandle &nh, ros::NodeHandle &nhPrivate)
         std::string modelString = _onnxModel;
 
 #ifdef _WIN32
+        // Select Device 0
+        OrtSessionOptionsAppendExecutionProvider_DML((OrtSessionOptions*)session_options, 0);
+
         auto modelFullPath = to_wstring(modelString).c_str();
 #else
         auto modelFullPath = _onnxModel.c_str();
