@@ -112,7 +112,6 @@ namespace yolo
 
                     if (_debug)
                     {
-                        ROS_INFO("ONNX: %s detected!", label.c_str());
                         // Draw a bounding box on the CV image
                         cv::Scalar color(255, 255, 0);
                         cv::Rect box;
