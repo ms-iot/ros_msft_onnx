@@ -1,10 +1,10 @@
 #include <ros/ros.h>
-#include <cv_bridge/cv_bridge.h>
-#include <image_transport/image_transport.h>
 #include <visualization_msgs/MarkerArray.h>
-#include <opencv2/calib3d/calib3d.hpp>
 #include <tf/LinearMath/Quaternion.h>
 #include <tf/transform_datatypes.h>
+#include <cv_bridge/cv_bridge.h>
+#include <image_transport/image_transport.h>
+#include <opencv2/calib3d/calib3d.hpp>
 
 #include "ros_msft_onnx/ros_msft_onnx.h"
 #include "ros_msft_onnx/pose_parser.h"
@@ -203,8 +203,8 @@ void PoseProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
     
     if (_fake)	
     {	
-        std::vector<visualization_msgs::Marker> markers;	
         visualization_msgs::Marker marker;	
+        visualization_msgs::MarkerArray markers;	
         marker.header.frame_id = _linkName;	
         marker.header.stamp = ros::Time();	
         marker.ns = "onnx";	
@@ -234,7 +234,7 @@ void PoseProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
         marker.color.g = 0.0;	
         marker.color.b = 1.0;	
 
-        markers.push_back(marker);	
+        markers.markers.push_back(marker);	
         _detect_pub.publish(markers);	
         return;	
     }
@@ -284,7 +284,7 @@ void PoseProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
             tf::Quaternion poseQuat;
             tfRod.getRotation(poseQuat);
 
-            std::vector<visualization_msgs::Marker> markers;
+            visualization_msgs::MarkerArray markers;
             visualization_msgs::Marker marker;
             double x = tvec.at<double>(0) / 1000.0;
             double y = tvec.at<double>(1) / 1000.0;
@@ -294,7 +294,7 @@ void PoseProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
             marker.mesh_resource = meshResource;
 
             tf::quaternionTFToMsg(poseQuat, marker.pose.orientation);
-            markers.push_back(marker);
+            markers.markers.push_back(marker);
 
             ros_msft_onnx_msgs::DetectedObjectPose doPose;
 
@@ -329,7 +329,7 @@ void PoseProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
 
                 marker1.color.r = 1.0; marker1.color.g = 0.0; marker1.color.b = 0.0;
                 tf::quaternionTFToMsg(poseQuat, marker1.pose.orientation);
-                markers.push_back(marker1);
+                markers.markers.push_back(marker1);
 
                 visualization_msgs::Marker marker2;
                 initMarker(marker2, 2, visualization_msgs::Marker::ARROW, x, y, z);
@@ -341,7 +341,7 @@ void PoseProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
 
                 marker2.color.r = 0.0; marker2.color.g = 1.0; marker2.color.b = 0.0;
                 tf::quaternionTFToMsg(poseQuat, marker2.pose.orientation);
-                markers.push_back(marker2);
+                markers.markers.push_back(marker2);
 
                 visualization_msgs::Marker marker3;
                 initMarker(marker3, 3, visualization_msgs::Marker::ARROW, x, y, z);
@@ -353,7 +353,7 @@ void PoseProcessor::ProcessOutput(std::vector<float> output, cv::Mat& image)
 
                 marker3.color.r = 0.0; marker3.color.g = 0.0; marker3.color.b = 1.0;
                 tf::quaternionTFToMsg(poseQuat, marker3.pose.orientation);
-                markers.push_back(marker3);
+                markers.markers.push_back(marker3);
             }
 
             _detect_pub.publish(markers);

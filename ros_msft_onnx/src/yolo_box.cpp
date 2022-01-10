@@ -1,7 +1,7 @@
 #include <ros/ros.h>
+#include <visualization_msgs/MarkerArray.h>
 #include <cv_bridge/cv_bridge.h>
 #include <image_transport/image_transport.h>
-#include <visualization_msgs/MarkerArray.h>
 
 #include "ros_msft_onnx/ros_msft_onnx.h"
 #include "ros_msft_onnx/yolo_box.h"
@@ -77,8 +77,8 @@ namespace yolo
 
         // If we found a person, send a message
         int count = 0;
-        std::vector<visualization_msgs::Marker> markers;
-        for (std::vector<YoloBox>::iterator it = boxes.begin(); it != boxes.end(); ++it)
+        visualization_msgs::MarkerArray markers;
+        for(std::vector<YoloBox>::iterator it = boxes.begin(); it != boxes.end(); ++it)
         {
             for (auto label : _labels)
             {
@@ -108,7 +108,7 @@ namespace yolo
                     marker.color.g = 0.0;
                     marker.color.b = 1.0;
 
-                    markers.push_back(marker);
+                    markers.markers.push_back(marker);
 
                     if (_debug)
                     {

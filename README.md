@@ -33,7 +33,7 @@ mkdir -p onnx_demo/src
 cd onnx_demo/src
 git clone https://github.com/ms-iot/ros_msft_onnx -b noetic-devel
 
-#For running the samples, clone `ros_msft_camera` as well
+# For running the samples, clone `cv_camera` as well
 git clone https://github.com/OTL/cv_camera --recursive
 ```
 
