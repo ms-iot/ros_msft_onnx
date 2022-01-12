@@ -6,56 +6,47 @@ ONNX Runtime Execution Providers (EPs) enables the execution of any ONNX model u
 In simple terms, developers no longer need to worry about the nuances of hardware specific custom libraries to accelerate their machine learning models.
 This repository demonstrates that by enabling the same code with ROS 2 to run on different hardware platforms using their respective AI acceleration libraries for optimized execution of the ONNX model.
 
-## System Requirement
+## Requirements
 
   * Microsoft Windows 10 64-bit or Ubuntu 20.04 LTS x86_64
   * ROS Noetic
-  * To make use of the hardware acceleration, the system is required to be compatible with [**CUDA 10.1**](https://developer.nvidia.com/cuda-toolkit) and [**cuDNN 7.6.5**](https://developer.nvidia.com/cudnn).
-
-> For GPU support, please follow the installation steps on NVIDIA portal before proceeding.
+  * GPU acceleration on Linux
+    * [**CUDA 11**](https://developer.nvidia.com/cuda-toolkit)
+    * [**cuDNN 8.x**](https://developer.nvidia.com/cudnn)
 
 ## How to Build
 The Onnx ROS Node is distrubted as source. To consume it in your robot, clone the ros_msft_onnx sources into your workspace.
 
-* Windows
-```Batchfile
+### Windows
+Windows will automatically use dedicated ML hardware, GPU or CPU depending on the best combination for the running ML model. 
+
+```cmd
 mkdir c:\workspace\onnx_demo\src
 cd c:\workspace\onnx_demo\src
 git clone https://github.com/ms-iot/ros_msft_onnx -b noetic-devel
 
 ::For running the samples, clone `ros_msft_camera` as well
 git clone https://github.com/ms-iot/ros_msft_camera --recursive
+catkin_make
 ```
 
-* Ubuntu
-```sh
+### Ubuntu
+
+```bash
 mkdir -p onnx_demo/src
 cd onnx_demo/src
 git clone https://github.com/ms-iot/ros_msft_onnx -b noetic-devel
 
 # For running the samples, clone `cv_camera` as well
 git clone https://github.com/OTL/cv_camera --recursive
+cd ..
+
+catkin_make
 ```
 
-## Building
-ONNX Runtime team is releasing different binaries for CPU and GPU (CUDA) support. To switch between the two, a workspace rebuild is required.
+If you would like to use CUDA support and have the software installed, you can build using the following command:
 
-
-Make sure to source your ROS version before building.
-
-* CPU Processing
-
-```Batchfile
-cd onnx_demo
-
-catkin_make -DCUDA_SUPPORT=OFF
-```
-
-* GPU Processing (CUDA)
-
-```Batchfile
-cd onnx_demo
-
+``` bash
 catkin_make -DCUDA_SUPPORT=ON
 ```
 
