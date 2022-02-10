@@ -14,6 +14,20 @@ else()
     option(CUDA_SUPPORT "use CUDA support onnxruntime library" ON)
 endif()
 
+if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "aarch64")
+if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/onnxruntime-linux-aarch64-gpu-1.10.0.tgz")
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/onnxruntime")
+    add_custom_target(ExtractOnnxruntime ALL
+        ${CMAKE_COMMAND} -E
+        tar xvzf "${CMAKE_CURRENT_SOURCE_DIR}/onnxruntime-linux-aarch64-gpu-1.10.0.tgz"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/onnxruntime"
+    )
+
+else()
+    message(ERROR "At this time, compiling for ARM64 requires building the ONNX runtime manually. Place the file as a tgz in this directory with the name onnxruntime-linux-aarch64-gpu-1.10.0.tgz")
+endif()
+
+else()
 if(CUDA_SUPPORT)
     message("Building with Cuda support")
     set(PACKAGE_URL "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.Gpu/1.4.0")
@@ -38,38 +52,69 @@ add_custom_target(ExtractOnnxruntime ALL
     tar xvzf "${CMAKE_CURRENT_BINARY_DIR}/onnxruntime.nuget"
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/onnxruntime"
 )
+endif()
 
-install(
-    DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/build/native/include/
-    DESTINATION include
-)
+if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "aarch64")
+    install(
+        DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/onnxruntime-linux-aarch64-gpu-1.10.0/include/
+        DESTINATION include
+    )
 
-install(
-    FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/runtimes/win-x64/native/onnxruntime.dll
-        ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/runtimes/win-x64/native/onnxruntime.pdb
-    DESTINATION bin
-)
+    install(
+        FILES
+            ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/onnxruntime-linux-aarch64-gpu-1.10.0/lib/libonnxruntime.so
+        DESTINATION lib
+        RENAME libonnxruntime.so.1.10.0
+    )
 
-install(
-    FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/runtimes/win-x64/native/onnxruntime.lib
-    DESTINATION lib
-)
+    install(
+        FILES
+            ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/onnxruntime-linux-aarch64-gpu-1.10.0/lib/libonnxruntime_providers_cuda.so
+            ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/onnxruntime-linux-aarch64-gpu-1.10.0/lib/libonnxruntime_providers_shared.so
+            ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/onnxruntime-linux-aarch64-gpu-1.10.0/lib/libonnxruntime_providers_tensorrt.so
+        DESTINATION lib
+    )
 
-install(
-    FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/runtimes/linux-x64/native/libonnxruntime.so
-    DESTINATION lib
-    RENAME libonnxruntime.so.1.4.0
-)
+    install(
+        FILES
+            ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/onnxruntime-linux-aarch64-gpu-1.10.0/LICENSE
+            ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/onnxruntime-linux-aarch64-gpu-1.10.0/ThirdPartyNotices.txt
+        DESTINATION share/${PROJECT_NAME}
+    )
+else()
+    install(
+        DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/build/native/include/
+        DESTINATION include
+    )
 
-install(
-    FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/LICENSE.txt
-        ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/ThirdPartyNotices.txt
-    DESTINATION share/${PROJECT_NAME}
-)
+    install(
+        FILES
+            ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/runtimes/win-x64/native/onnxruntime.dll
+            ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/runtimes/win-x64/native/onnxruntime.pdb
+        DESTINATION bin
+    )
+
+    install(
+        FILES
+            ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/runtimes/win-x64/native/onnxruntime.lib
+        DESTINATION lib
+    )
+
+    install(
+        FILES
+            ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/runtimes/linux-x64/native/libonnxruntime.so
+        DESTINATION lib
+        RENAME libonnxruntime.so.1.4.0
+    )
+    
+    install(
+        FILES
+            ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/LICENSE.txt
+            ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/ThirdPartyNotices.txt
+        DESTINATION share/${PROJECT_NAME}
+    )
+endif()
+
 
 ament_package(
   CONFIG_EXTRAS "src/onnxruntime_vendor-extras.cmake"
