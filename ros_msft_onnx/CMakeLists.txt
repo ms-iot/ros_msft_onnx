@@ -69,28 +69,39 @@ add_executable(${PROJECT_NAME}_node src/ros_msft_onnx.cpp src/main.cpp src/yolo_
 add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME}_gencfg ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${EIGEN3_LIBS} ${YAML_CPP_LIBRARIES})
 
-message("Installing onnxruntime_vendor Nuget package")
 
-if(MSVC)
-  set(ONNX_RUNTIME "Microsoft.ML.OnnxRuntime.DirectML.1.7.0")
-  set(PACKAGE_URL "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.DirectML/1.7.0")
-  set(PACKAGE_SHA512 "2e5bd2c0ade72444d4efdfbd6a75571aaa72045769f9b5847186129c9e5e667ad080d5d2b9a12cce88c9eee68302be89cdb7030ccefa3d572e591b1c453c7340")
-elseif(CUDA_SUPPORT)
-  set(ONNX_RUNTIME "Microsoft.ML.OnnxRuntime.Gpu.1.7.1")
-  set(PACKAGE_URL "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.Gpu/1.7.1")
-  set(PACKAGE_SHA512 "41112118007aae34fcc38100152df6e6fa5fc567e61aa4ded42a26d39751f1be7ec225c0d73799f065015e284f0fb9bd7e0835c733e9abad5b0243a391411f8d")
+message (STATUS "Building the Onnx Runtime ROS node for ${CMAKE_SYSTEM_PROCESSOR}")
+
+if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "aarch64")
+  if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../onnxruntime-linux-aarch64-gpu-1.10.0.tgz")
+    set(ONNX_RUNTIME "onnxruntime-linux-aarch64-gpu-1.10.0")
+  else()
+    message(FATAL_ERROR "At this time, compiling for ARM64 requires building the ONNX runtime manually. Place the file as a tgz in ros_msft_onnx/onnxruntime-linux-aarch64-gpu-1.10.0.tgz")
+  endif()
 else()
-  set(ONNX_RUNTIME "Microsoft.ML.OnnxRuntime.1.7.0")
-  set(PACKAGE_URL "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime/1.7.0")
-  set(PACKAGE_SHA512 "1fc15386bdfa455f457e50899e3c9c454aafbdc345799dcf4ecfd6990a9dbd8cd7f0b1f3bf412c47c900543c535f95aa1cb1e14e9851cb9b600c60a981f38a50")
-endif()
+  message(STATUS "Installing onnxruntime_vendor Nuget package")
 
-file(DOWNLOAD
-    ${PACKAGE_URL}
-    ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime.nuget
-    EXPECTED_HASH SHA512=${PACKAGE_SHA512}
-    SHOW_PROGRESS
-)
+  if(MSVC)
+    set(ONNX_RUNTIME "Microsoft.ML.OnnxRuntime.DirectML.1.7.0")
+    set(PACKAGE_URL "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.DirectML/1.7.0")
+    set(PACKAGE_SHA512 "2e5bd2c0ade72444d4efdfbd6a75571aaa72045769f9b5847186129c9e5e667ad080d5d2b9a12cce88c9eee68302be89cdb7030ccefa3d572e591b1c453c7340")
+  elseif(CUDA_SUPPORT)
+    set(ONNX_RUNTIME "Microsoft.ML.OnnxRuntime.Gpu.1.7.1")
+    set(PACKAGE_URL "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime.Gpu/1.7.1")
+    set(PACKAGE_SHA512 "41112118007aae34fcc38100152df6e6fa5fc567e61aa4ded42a26d39751f1be7ec225c0d73799f065015e284f0fb9bd7e0835c733e9abad5b0243a391411f8d")
+  else()
+    set(ONNX_RUNTIME "Microsoft.ML.OnnxRuntime.1.7.0")
+    set(PACKAGE_URL "https://www.nuget.org/api/v2/package/Microsoft.ML.OnnxRuntime/1.7.0")
+    set(PACKAGE_SHA512 "1fc15386bdfa455f457e50899e3c9c454aafbdc345799dcf4ecfd6990a9dbd8cd7f0b1f3bf412c47c900543c535f95aa1cb1e14e9851cb9b600c60a981f38a50")
+  endif()
+
+  file(DOWNLOAD
+      ${PACKAGE_URL}
+      ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime.nuget
+      EXPECTED_HASH SHA512=${PACKAGE_SHA512}
+      SHOW_PROGRESS
+  )
+endif()
 
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}")
 
@@ -99,24 +110,43 @@ if(MSVC)
   execute_process(COMMAND tar xvzf "${CMAKE_CURRENT_BINARY_DIR}/onnxruntime.nuget" 
                WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}"
                )
+  include_directories(
+    ${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}/build/native/include/
+  )
 
+elseif (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "aarch64")
+  set(ARCH "linux-aarch64")
+  # aarch64 has a different package layout
+  execute_process(COMMAND tar xvzf "${CMAKE_CURRENT_SOURCE_DIR}/../onnxruntime-linux-aarch64-gpu-1.10.0.tgz" 
+               WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/onnxruntime"
+               )
+
+  include_directories(
+    ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/onnxruntime-linux-aarch64-gpu-1.10.0/include/
+  )
 else()
   set(ARCH "linux-x64")
   execute_process(COMMAND unzip -oq "${CMAKE_CURRENT_BINARY_DIR}/onnxruntime.nuget" 
                WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}"
                )
 
+  include_directories(
+    ${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}/build/native/include/
+  )
 endif()
 
-include_directories(
-  ${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}/build/native/include/
-)
 
 if(MSVC)
   target_link_libraries(${PROJECT_NAME}_node ${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}/runtimes/${ARCH}/native/onnxruntime.lib)
   configure_file(${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}/runtimes/${ARCH}/native/onnxruntime.dll ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/onnxruntime.dll COPYONLY)
   configure_file(${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}/runtimes/${ARCH}/native/onnxruntime.lib ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/onnxruntime.lib COPYONLY)
   configure_file(${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}/runtimes/${ARCH}/native/onnxruntime.pdb ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/onnxruntime.pdb COPYONLY)
+elseif (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "aarch64")
+  target_link_libraries(${PROJECT_NAME}_node ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/onnxruntime-linux-aarch64-gpu-1.10.0/lib/libonnxruntime.so)
+  configure_file(${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/onnxruntime-linux-aarch64-gpu-1.10.0/lib/libonnxruntime_providers_cuda.so ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/libonnxruntime_providers_cuda.so COPYONLY)
+  configure_file(${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/onnxruntime-linux-aarch64-gpu-1.10.0/lib/libonnxruntime_providers_shared.so ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/libonnxruntime_providers_shared.so COPYONLY)
+  configure_file(${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/onnxruntime-linux-aarch64-gpu-1.10.0/lib/libonnxruntime_providers_tensorrt.so ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/libonnxruntime_providers_tensorrt.so COPYONLY)
+
 else()
   target_link_libraries(${PROJECT_NAME}_node ${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}/runtimes/${ARCH}/native/libonnxruntime.so)
   configure_file(${CMAKE_CURRENT_BINARY_DIR}/${ONNX_RUNTIME}/runtimes/${ARCH}/native/libonnxruntime.so ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/libonnxruntime.so COPYONLY)
