@@ -30,7 +30,7 @@ find_package(OpenCV REQUIRED)
 
 # The node expects to use the Tiny YOLO model available in the ONNX model zoo.
 file(DOWNLOAD
-  https://github.com/onnx/models/raw/master/vision/object_detection_segmentation/tiny-yolov2/model/tinyyolov2-8.onnx
+  https://github.com/onnx/models/raw/main/vision/object_detection_segmentation/tiny-yolov2/model/tinyyolov2-8.onnx
   ${CMAKE_CURRENT_BINARY_DIR}/models/tinyyolov2-8.onnx
   SHOW_PROGRESS
 )
