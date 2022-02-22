@@ -148,7 +148,7 @@ namespace yolo
                         continue;
 
                     std::vector<float> classes(CLASS_COUNT);
-                    float classOffset = channel + BOX_INFO_FEATURE_COUNT;
+                    int classOffset = channel + BOX_INFO_FEATURE_COUNT;
 
                     for (int i = 0; i < CLASS_COUNT; i++)
                         classes[i] = modelOutputs[GetOffset(cx, cy, i + classOffset)];
@@ -158,7 +158,7 @@ namespace yolo
                     // Get the index of the top score and its value
                     auto iter = std::max_element(classes.begin(), classes.end());
                     float topScore = (*iter) * confidence;
-                    int topClass = std::distance(classes.begin(), iter);
+                    int topClass = (int)std::distance(classes.begin(), iter);
 
                     if (topScore < threshold)
                         continue;
@@ -201,7 +201,7 @@ namespace yolo
         std::transform(values.begin(), values.end(), values.begin(),
             [&](float x) { return std::exp(x - max_val); });
 
-        float exptot = std::accumulate(values.begin(), values.end(), 0.0);
+        double exptot = std::accumulate(values.begin(), values.end(), 0.0);
         std::transform(values.begin(), values.end(), values.begin(),
             [&](float x) { return (float)(x / exptot); });
     }
