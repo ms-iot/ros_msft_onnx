@@ -38,7 +38,7 @@ colcon build --cmake-args -DCUDA_SUPPORT=OFF
 mkdir colcon_ws\src
 cd colcon_ws
 
-wget https://raw.githubusercontent.com/ms-iot/ros_msft_onnx/master/onnx_windows.repos
+wget https://raw.githubusercontent.com/ms-iot/ros_msft_onnx/foxy/onnx_windows.repos
 vcs import src < onnx.repos
 colcon build --cmake-args -DCUDA_SUPPORT=ON
 ```
@@ -49,7 +49,7 @@ colcon build --cmake-args -DCUDA_SUPPORT=ON
 mkdir colcon_ws/src
 cd colcon_ws
 
-wget https://raw.githubusercontent.com/ms-iot/ros_msft_onnx/master/onnx.repos
+wget https://raw.githubusercontent.com/ms-iot/ros_msft_onnx/foxy/onnx.repos
 vcs import src < onnx.repos
 colcon build --cmake-args -DCUDA_SUPPORT=OFF
 ```
@@ -60,7 +60,7 @@ colcon build --cmake-args -DCUDA_SUPPORT=OFF
 mkdir colcon_ws/src
 cd colcon_ws
 
-wget https://raw.githubusercontent.com/ms-iot/ros_msft_onnx/master/onnx.repos
+wget https://raw.githubusercontent.com/ms-iot/ros_msft_onnx/foxy/onnx.repos
 vcs import src < onnx.repos
 colcon build --cmake-args -DCUDA_SUPPORT=ON
 ```
