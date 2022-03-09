@@ -10,4 +10,4 @@ repositories:
   ros_msft_onnx:
     type: git
     url: https://github.com/ms-iot/ros_msft_onnx.git
-    version: master
+    version: foxy
