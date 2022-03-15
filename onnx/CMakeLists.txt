@@ -56,7 +56,8 @@ ament_target_dependencies(${PROJECT_NAME}
   onnxruntime_vendor
   ros_msft_onnx_msgs
   tf2
-  geometry_msgs)
+  geometry_msgs
+  OpenCV)
 
 install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/models/tinyyolov2-8.onnx
