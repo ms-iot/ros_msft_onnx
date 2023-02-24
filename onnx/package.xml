@@ -8,13 +8,14 @@
   <description>
     TinyYOLOv2 Object Detection
   </description>
-  <maintainer email="seanyen@microsoft.com">Sean Yen</maintainer>
+  <maintainer email="riotsquad@microsoft.com">Microsoft ROS Team</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <depend>eigen</depend>
   <depend>geometry_msgs</depend>
+  <depend>tf2_geometry_msgs</depend>
   <depend>ament_index_cpp</depend>
   <depend>onnxruntime_vendor</depend>
   <depend>rclcpp</depend>

@@ -3,7 +3,6 @@
 
 #include <onnx/onnx_tracker.h>
 #include <onnx/yolo_processor.h>
-#include <onnx/pose_processor.h>
 
 #include <string>
 #include <codecvt>
@@ -197,12 +196,12 @@ void OnnxProcessor::ProcessImage(const sensor_msgs::msg::Image::SharedPtr msg)
         if (aspectRatio > 1.0f)
         {
             downsampleSize.height = mlSize.height;
-            downsampleSize.width = mlSize.height * aspectRatio;
+            downsampleSize.width = (int)(mlSize.height * aspectRatio);
         }
         else
         {
             downsampleSize.width = mlSize.width;
-            downsampleSize.height = mlSize.width * aspectRatio;
+            downsampleSize.height = (int)(mlSize.width * aspectRatio);
         }
 
         cv::resize(cv_ptr->image, image_resized, downsampleSize, 0, 0, cv::INTER_CUBIC);
@@ -333,35 +332,32 @@ void OnnxProcessor::DumpParameters()
 bool OnnxTracker::init(rclcpp::Node::SharedPtr& node)
 {
     // Declare nodes parameters 
-    node->declare_parameter("tracker_type");
-    node->declare_parameter("onnx_model_path");
-    node->declare_parameter("link_name");
-    node->declare_parameter("confidence");
-    node->declare_parameter("tensor_width");
-    node->declare_parameter("tensor_height");
-    node->declare_parameter("debug");
-    node->declare_parameter("image_processing");
-    node->declare_parameter("label");
-    node->declare_parameter("image_topic");
-    node->declare_parameter("visual_marker_topic");
-    node->declare_parameter("image_debug_topic");
-    node->declare_parameter("model_bounds");
-    node->declare_parameter("mesh_scale");
-    node->declare_parameter("mesh_resource");
-    node->declare_parameter("mesh_rotation");
+    node->declare_parameter<std::string>("tracker_type", "yolo");
+    node->declare_parameter<std::string>("onnx_model_path", "");
+    node->declare_parameter<std::string>("link_name", "camera");
+    node->declare_parameter<double>("confidence", 0.5);
+    node->declare_parameter<uint16_t>("tensor_width", 416);
+    node->declare_parameter<uint16_t>("tensor_height", 416);
+    node->declare_parameter<bool>("debug", false);
+    node->declare_parameter<std::string>("image_processing", "resize");
+    node->declare_parameter<std::string>("label", "person");
+    node->declare_parameter<std::string>("image_topic","/camera/image_raw");
+    node->declare_parameter<std::string>("visual_marker_topic", "visual_markers");
+    node->declare_parameter<std::string>("image_debug_topic", "image_debug_raw");
+    node->declare_parameter<std::vector<double>>("model_bounds");
+    node->declare_parameter<std::vector<double>>("mesh_scale");
+    node->declare_parameter<std::vector<double>>("mesh_resource");
+    node->declare_parameter<std::vector<double>>("mesh_rotation");
     
     // Parameters.
     std::string trackerType;
     if (node->get_parameter("tracker_type", trackerType))
     {
-        if (trackerType == "yolo")
+        //if (trackerType == "yolo")
         {
             _processor = std::make_shared<yolo::YoloProcessor>();
         }
-        else if (trackerType == "pose")
-        {
-            _processor = std::make_shared<pose::PoseProcessor>();
-        }
+        // Pose detection is not supported, due to inability to create model
     }
 
     // Tracker type was not specified 

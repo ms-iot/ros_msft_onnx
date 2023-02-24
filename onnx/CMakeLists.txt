@@ -24,6 +24,7 @@ find_package(cv_bridge REQUIRED)
 find_package(onnxruntime_vendor REQUIRED)
 find_package(ros_msft_onnx_msgs REQUIRED)
 find_package(tf2 REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(OpenCV REQUIRED)
@@ -43,8 +44,7 @@ include_directories(
 add_executable(${PROJECT_NAME}
   src/main.cpp
   src/onnx_tracker.cpp
-  src/yolo_processor.cpp
-  src/pose_processor.cpp)
+  src/yolo_processor.cpp)
 
 ament_target_dependencies(${PROJECT_NAME}
   ament_index_cpp
@@ -56,6 +56,7 @@ ament_target_dependencies(${PROJECT_NAME}
   onnxruntime_vendor
   ros_msft_onnx_msgs
   tf2
+  tf2_geometry_msgs
   geometry_msgs)
 
 install(FILES
