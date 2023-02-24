@@ -22,9 +22,15 @@ if (NOT TARGET onnxruntime-unofficial::onnxruntime)
             IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/bin/onnxruntime.dll"
         )
     elseif(UNIX)
-        set_target_properties(onnxruntime-unofficial::onnxruntime PROPERTIES
-            IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/lib/libonnxruntime.so.1.4.0"
-        )
+        if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "aarch64")
+            set_target_properties(onnxruntime-unofficial::onnxruntime PROPERTIES
+                IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/lib/libonnxruntime.so.1.10.0"
+            )
+        else()
+            set_target_properties(onnxruntime-unofficial::onnxruntime PROPERTIES
+                IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/lib/libonnxruntime.so.1.4.0"
+            )
+        endif()
     else()
         message(FATAL_ERROR "unsupported platform.")
     endif()
