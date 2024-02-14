@@ -69,7 +69,7 @@ endif()
 
 install(
     FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/LICENSE.txt
+        ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/LICENSE
         ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime/ThirdPartyNotices.txt
     DESTINATION share/${PROJECT_NAME}
 )

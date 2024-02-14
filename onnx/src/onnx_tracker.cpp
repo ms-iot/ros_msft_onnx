@@ -101,7 +101,7 @@ bool OnnxProcessor::init(rclcpp::Node::SharedPtr& node)
         }
         else
         {
-             RCLCPP_ERROR(_node->get_logger(),"Onnx: unknown image processing type: %s", imageProcessingType);
+             RCLCPP_ERROR(_node->get_logger(),"Onnx: unknown image processing type: %s", imageProcessingType.c_str());
             // default;
         }
     }
@@ -277,9 +277,9 @@ void OnnxProcessor::DumpParameters()
     // iterate over all input nodes
     for (int i = 0; i < num_input_nodes; i++) {
         // print input node names
-        char* input_name = _session->GetInputName(i, *_allocator);
-        printf("Input %d : name=%s\n", i, input_name);
-        input_node_names[i] = input_name;
+        auto input_name = _session->GetInputNameAllocated(i, *_allocator);
+        printf("Input %d : name=%s\n", i, input_name.get());
+        input_node_names[i] = input_name.get();
 
         // print input node types
         Ort::TypeInfo type_info = _session->GetInputTypeInfo(i);
@@ -308,9 +308,9 @@ void OnnxProcessor::DumpParameters()
     // iterate over all output nodes
     for (int i = 0; i < num_output_nodes; i++) {
         // print output node names
-        char* output_name = _session->GetOutputName(i, *_allocator);
-        printf("Output %d : name=%s\n", i, output_name);
-        output_node_names[i] = output_name;
+        auto output_name = _session->GetOutputNameAllocated(i, *_allocator);
+        printf("Output %d : name=%s\n", i, output_name.get());
+        output_node_names[i] = output_name.get();
 
         // print input node types
         Ort::TypeInfo type_info = _session->GetOutputTypeInfo(i);
